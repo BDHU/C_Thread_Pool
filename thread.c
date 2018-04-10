@@ -36,7 +36,7 @@ void thread_pool_init(int workers) {
 
 void* worker_func(void* t) {
   Thread* info = (Thread*) t;
-  printf("thread %u is up and running \n", info->tid);
+  printf("thread %lu is up and running \n", info->tid);
 
   return NULL;
 } 
