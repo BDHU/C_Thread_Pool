@@ -21,7 +21,7 @@ void thread_pool_init(int w, int use_mutex) {
   workers = w == 0 ? get_nprocs() : w;
   printf("Initializing thread pool with %d threads \n", workers);  
   
-  // initialize threads
+  // initialize threads info
   thread_info = calloc(workers, sizeof(Thread)); 
   if (!thread_info) {
       printf("Failed to initialize thread pool. Exiting now.");
@@ -33,23 +33,28 @@ void thread_pool_init(int w, int use_mutex) {
   for (int i=0; i<workers; i++) {
     if ((e=sem_init(&thread_info[i].sema, PTHREAD_PROCESS_PRIVATE, 0)) != 0) {
       printf("failed to initialize the semaphore for thread %d, error code %d\n", i, e);
+      i--; // if we simply continue executition we will have one less
+           // worker with proper functionality
       continue;
     }
 
     // initialize both just in case
     if ((e=pthread_mutex_init(&thread_info[i].mutex, NULL)) != 0) {
       printf("failed to initialize the mutex for thread %d, error code %d\n", i, e);
+      i--;
       continue;
     }
 
     if ((e=pthread_spin_init(&thread_info[i].lock, PTHREAD_PROCESS_PRIVATE)) != 0) {
       printf("failed to initialize the spinlock for thread %d, error code %d \n", i, e);
+      i--;
       continue; // skip this thread, oops.
     } 
 
-      if (pthread_create(&thread_info[i].tid, NULL, worker_func, &thread_info[i]) != 0) {
-          printf("failed to create thread %d \n", i);
-      }
+    if (pthread_create(&thread_info[i].tid, NULL, worker_func, &thread_info[i]) != 0) {
+      printf("failed to create thread %d \n", i);
+      i--;
+    }
   }
 }
 
@@ -74,8 +79,10 @@ Task* task_init(task_func *func, void* aux) {
 
 // should be used as an internal function
 void task_add(Task* task, Thread *thread) {
-  if (task == NULL || thread == NULL)
+  if (task == NULL || thread == NULL) {
+    printf("Warning: you have either a NULL task or NULL thread\n");
     return;
+  }
   
   lock(thread);
   thread->total_tasks++;
