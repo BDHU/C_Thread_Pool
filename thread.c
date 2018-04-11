@@ -183,6 +183,7 @@ void* worker_func(void* t) {
       free(task);
     }
   }
+}
 
 void lock(Thread* t) {
   int e = 0;
@@ -209,4 +210,3 @@ void unlock(Thread* t) {
     exit(1);
   }
 }
-
