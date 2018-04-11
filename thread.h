@@ -4,21 +4,24 @@
 typedef void task_func (void *aux);
 
 typedef struct task {
-  void*        aux;
-  task_func*   func;
+  void*        aux;               /* pointer to arguments of the task */
+  task_func*   func;              /* pointer to the function this task will execute */
   struct task* prev;
   struct task* next;
 } Task;
 
 typedef struct thread {
   pthread_t          tid;
-  pthread_spinlock_t lock;        // guard access to task_queue
+  pthread_spinlock_t lock;        /* guard access to task_queue */
   pthread_mutex_t    mutex;
-  sem_t              sema; // use to notify task is there
-  int                total_tasks; // number of tasks assigned to this thread TODO atomic maybe?
+  sem_t              sema;        /* use to notify task is there */
+  int                total_tasks; /* number of tasks assigned to this thread TODO atomic maybe? */
   Task*              task_queue;
   Task*              last_task;
 } Thread;
+
+/* ======================== user API ======================== */
+
 
 Task* task_init(task_func *func, void* aux);
 void task_add(Task* task, Thread *thread);
