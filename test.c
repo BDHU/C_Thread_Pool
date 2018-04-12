@@ -6,6 +6,12 @@
 
 int mutex_flag;
 
+void test_fib_serires(void *num_ptr);
+void test1(void* arg) {
+  for(int i=0; i<34242440; i++);
+  printf("=============== DONE ============ \n");
+}
+
 int main(int argc, char** argv) {
   int o;
   int workers = 0;
@@ -35,6 +41,12 @@ int main(int argc, char** argv) {
 
   // barrier for now?
   // does not wake up till later
+  for (int i=0; i<10; i++) {
+    int* x = malloc(sizeof(int));
+    *x = i + 3;
+    thread_pool_add(test1, NULL);  
+    thread_pool_add(test_fib_serires, x);    
+  }
   thread_pool_wait();
   printf("done waiting for jobs \n");
   // while(1);
@@ -57,6 +69,7 @@ void test_fib_serires(void *num_ptr) {
 /* ========================= */
 void* spawn_child_threads_helper_func(void *aux) {
   printf("Thread id: %lu\n", pthread_self());
+  return NULL;
 }
 
 void test_spawn_child_threads(void *aux) {
