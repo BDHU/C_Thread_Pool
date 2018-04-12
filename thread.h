@@ -20,6 +20,12 @@ typedef struct thread {
   Task*              last_task;
 } Thread;
 
+typedef struct daemon {
+  // pointer to the thread pool
+  Thread *thread_pool;
+  
+} Daemon;
+
 /* ======================== user API ======================== */
 
 
@@ -28,3 +34,7 @@ void task_add(Task* task, Thread *thread);
 
 void thread_pool_init(int workers, int mutex_flag);
 void thread_pool_wait();
+
+/* ======================== Thread pool daemon ======================== */
+// TODO ensure daemon is always up
+void daemon_init();

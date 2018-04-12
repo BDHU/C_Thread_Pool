@@ -28,7 +28,8 @@ int main(int argc, char** argv) {
   }
 
   thread_pool_init(workers, mutex_flag);
-  
+
+
   // add jobs
   // need to have a way of knowing when to notify test.c
 
@@ -37,4 +38,72 @@ int main(int argc, char** argv) {
   thread_pool_wait();
   printf("done waiting for jobs \n");
   // while(1);
+}
+
+/* =================== user defined function =================== */
+void test_fib_serires(void *num_ptr) {
+  int i = 0;
+  int j = 1;
+  int num = *((int *)num_ptr);
+  int index = 0;
+  for (; index<num; index++) {
+    printf("The %d number: %d\n", index, j);
+    int temp = j;
+    j = j + i;
+    i = temp;
+  }
+}
+
+/* ========================= */
+void* spawn_child_threads_helper_func(void *aux) {
+  printf("Thread id: %lu\n", pthread_self());
+}
+
+void test_spawn_child_threads(void *aux) {
+  int i = 0;
+  pthread_t threads[10];
+  for (; i<10; i++) {
+    pthread_create(&threads[i], NULL, spawn_child_threads_helper_func, NULL);
+  }
+}
+/* ========================= */
+
+void test_recursion(void *a) {
+  int *aux = (int *)a;
+  int num = *aux;
+  if (num == 0)
+    return;
+  (*aux) = (*aux) - 1;
+  test_recursion(aux);
+}
+
+void test_mutex(void *m) {
+  pthread_mutex_lock(m);
+  printf("print in mutex\n");
+  pthread_mutex_unlock(m);
+}
+
+void test_spinlock(void *spin) {
+  pthread_spin_lock(spin);
+  printf("print in spinlock\n");
+  pthread_spin_unlock((pthread_spinlock_t *)spin);
+}
+
+void test_async_print(void *num) {
+  int i = 0;
+  for (; i<*((int *)num); i++) {
+    printf("num: %d\n", *((int *)num));
+  }
+}
+
+/* spawn enormous amout of tasks */
+void test_spawn_tasks(void *num) {
+  thread_pool_init(*((int *)num), mutex_flag);
+}
+
+void test_redundant_thread_pool_init(void *num) {
+  int i = 0;
+  for (; i<*((int *)num); i++) {
+    thread_pool_init(*((int *)num), mutex_flag);
+  }
 }

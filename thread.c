@@ -150,6 +150,7 @@ void task_add(Task* task, Thread *thread) {
 //     free((void *) task);
 // }
 
+/* ======================== Daemon ======================== */
 
 void* worker_func(void* t) {
   int e;
@@ -159,7 +160,7 @@ void* worker_func(void* t) {
   Task* task = NULL;
   /* grabbing a task from the front of the queue
      assume task is present */
-  while(1) {
+  while (1) {
     // wait for jobs to come in. busy waiting for now
     // TODO: think about blocking/parking policy
     // while (info->task_queue == NULL);
@@ -173,8 +174,8 @@ void* worker_func(void* t) {
     
     lock(info);
     /* state might have changed already */
-    task = info->task_queue;
-    info->task_queue = task->next;
+  task = info->task_queue;
+  info->task_queue = task->next;
     unlock(info);
 
     /* task may or may not exist */
