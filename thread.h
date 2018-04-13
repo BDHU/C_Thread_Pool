@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 typedef void task_func (void *aux);
 
@@ -10,14 +11,19 @@ typedef struct task {
   struct task* next;
 } Task;
 
+// used to hold a segment of tasks
+typedef struct task_queue {
+  int num_tasks;   
+  Task* start;
+  Task* end;
+} Task_Queue; 
+
 typedef struct thread {
   pthread_t          tid;
   pthread_spinlock_t lock;        /* guard access to task_queue */
   pthread_mutex_t    mutex;
   sem_t              sema;        /* use to notify task is there */
-  int                total_tasks; /* number of tasks assigned to this thread TODO atomic maybe? */
-  Task*              task_queue;
-  Task*              last_task;
+  Task_Queue*        queue;
 } Thread;
 
 typedef struct daemon {
@@ -28,11 +34,8 @@ typedef struct daemon {
 
 /* ======================== user API ======================== */
 
-
-Task* task_init(task_func *func, void* aux);
-void task_add(Task* task, Thread *thread);
-
 void thread_pool_init(int workers, int mutex_flag);
+bool thread_pool_add(task_func *func, void* aux);
 void thread_pool_wait();
 
 /* ======================== Thread pool daemon ======================== */

@@ -4,22 +4,34 @@
 #include <sys/sysinfo.h>
 #include "thread.h"
 
+#define CONT_TASK 3
 
 /* will probably change to list when the thread number becomes dynamic */
 Thread* thread_info;
+Task* avail_tasks; // global queue for tasks
+Task* last_task;
 int workers;
 int mutex_flag;
+
+/* guard access to task_queue */
+pthread_spinlock_t tasks_lock;     
+int total_tasks;   
 
 void* worker_func(void* t);
 void lock(Thread* t);
 void unlock(Thread* t);
 
+Task* task_init(task_func *func, void* aux);
+void task_add(Task* task);
+Task_Queue* grab_task(int num_tasks);
 
 /* ======================== Thread pool ======================== */
 
-
 void thread_pool_init(int w, int use_mutex) {
   mutex_flag = use_mutex;
+  avail_tasks = NULL;
+  last_task = NULL;
+  total_tasks = 0;
 
   /* set workers to number of processors if not given a defined value */
   workers = w == 0 ? get_nprocs() : w;
@@ -32,7 +44,12 @@ void thread_pool_init(int w, int use_mutex) {
       exit(1);
   }
 
-  int e;
+  int e;  
+  if ((e=pthread_spin_init(&tasks_lock, PTHREAD_PROCESS_PRIVATE)) != 0) {
+    printf("failed to initialize the spinlock error code %d \n", e);
+    exit(1);    
+  }
+
   for (int i=0; i<workers; i++) {
     if ((e=sem_init(&thread_info[i].sema, PTHREAD_PROCESS_PRIVATE, 0)) != 0) {
       printf("failed to initialize the semaphore for thread %d, error code %d\n", i, e);
@@ -61,12 +78,27 @@ void thread_pool_init(int w, int use_mutex) {
 
 /* Wait for threads to finish by checking their task_queues */
 void thread_pool_wait() {
-  for (int i=0; i<workers; i++) 
-    while(thread_info[i].task_queue != NULL);
+  // may need to use a barrier 
+  while(1);
+  // Note: this only works because there can be on thread callling 
+  // thread_pool_wait and thread_pool_add. If we want to allow
+  // multiple threads to update, we should add a lock to prevent
+  // one from happening when waiting is happening.
+  // for (int i=0; i<workers; i++) 
+  //   while(thread_info[i].queue != NULL);
+  //^ This doesn't work lol
+}
+
+bool thread_pool_add(task_func *func, void* aux) {
+  Task* t = task_init(func, aux);
+  if (t == NULL) {
+    return false;
+  }
+  task_add(t);
+  return true;
 }
 
 /* ======================== Task ======================== */
-
 
 /* Initialize the task executing user-defined function */
 Task* task_init(task_func *func, void* aux) {
@@ -90,109 +122,114 @@ Task* task_init(task_func *func, void* aux) {
 }
 
 /* should be used as an internal function */
-void task_add(Task* task, Thread *thread) {
-  if (task == NULL || thread == NULL) {
-    printf("Warning: you have either a NULL task or NULL thread\n");
+void task_add(Task* task) {
+  // int e;
+
+  if (task == NULL) {
+    printf("Warning: you have either a NULL task \n");
     return;
   }
   
-  lock(thread);
-  thread->total_tasks++;
+  lock(NULL);
+  total_tasks++;
 
-  /* execute if the task queue is initially empty */
-  if (thread->task_queue == NULL) {
-    thread->task_queue = task;
-    thread->last_task = task;
-    unlock(thread);
-    return;
+  if (avail_tasks == NULL) {
+    avail_tasks = task;
+  } else {
+    task->prev = last_task;
+    last_task->next = task;
   }
 
-  /* If the task queue isn't empty just do normal add */
-  task->prev = thread->last_task;
-  thread->last_task->next = task;
-  thread->last_task = task;
-  unlock(thread);
+  last_task = task;
+  unlock(NULL);
+  
+  // if ((e=sem_post(&info->sema)) != 0) 
+  //   printf("Failed to add task, error %d, will keep trying \n", errno);
 }
 
-// TODO so far we only have a single queue on each thread to keep track
-// of all tasks assigned to it, but later we might have multiple queues
-// needed to track task at different states such as blocked etc.
-// void task_remove(Thread *thread) {
-//     // currently we are
-//     assert(thread != NULL);
-//     lock(thread);
-//     if (thread->last_task == NULL) {
-//         unlock(thread);
-//         return;
-//     }
-    
-//     // The task we remove can be the only one left in the queue
-//     if (thread->task_queue == thread->last_task) {
-//         Task *task_to_remove = thread->last_task;
-//         thread->last = NULL;
-//         thread->task_queue = NULL;
-//         task_free(task_to_remove);
-//         unlock(thread);
-//         return;
-//     }
+// can specify how many tasks to grab, will do best effort
+Task_Queue* grab_task(int num_tasks) {
+  Task_Queue *t = NULL;     
+  
+  lock(NULL);
+  if (total_tasks <= 0)
+    goto done;
+  if ((t = malloc(sizeof(Task_Queue))) == NULL)
+    goto done;
 
-//     // normal situation
-//     Task *task_to_remove = thread->last_task;
-//     thread->last_task = thread->last_task->prev;
-//     thread->last_task->next = NULL;
-//     task_free(task_to_remove);
-//     unlock(thread);
-// }
+  t->start = avail_tasks;
+  t->end = avail_tasks;
+  t->num_tasks = total_tasks;  
+  
+  if (num_tasks < total_tasks) {
+    // take off the first x number of tasks, set avail_tasks to the next entry.
+    for (int i=1; i<num_tasks; i++) 
+      t->end = t->end->next;
+    avail_tasks = t->end->next;
+    // avail_tasks->prev = NULL; // We don't reall use prev, should we get rid of it?
+    t->end->next = NULL;  
+  } else {
+    t->end = last_task;
+    last_task = NULL;
+    avail_tasks = NULL;
+  }
+  total_tasks = num_tasks < total_tasks ? total_tasks - num_tasks : 0;
+  t->num_tasks -= total_tasks;
 
-// bool task_free(Task *task) {
-//     // need to clean up the mess in thread
-//     assert(task != NULL);
-//     free((void *) task);
-// }
-
-/* ======================== Daemon ======================== */
+done:
+  unlock(NULL);
+  return t;
+}
 
 void* worker_func(void* t) {
-  int e;
-  Thread* info = (Thread*) t;
-  printf("thread %lu is up and running \n", info->tid);
+  // int e;
+  Thread* thread = (Thread*) t;
+  // printf("thread %lu is up and running \n", thread->tid);
 
-  Task* task = NULL;
+  // Task* task = NULL;
   /* grabbing a task from the front of the queue
      assume task is present */
-  while (1) {
-    // wait for jobs to come in. busy waiting for now
-    // TODO: think about blocking/parking policy
-    // while (info->task_queue == NULL);
+  while(1) {
+    // back to busy waiting for now
+    while(avail_tasks == NULL);
 
     // NOTE: need to consider the interaction of sem_wait and 
     // future work stealing algorithm
-    if ((e=sem_wait(&info->sema)) != 0) {
-      printf("Failed to wait for task, error %d, will keep trying \n", errno);
-      continue;
+    // if ((e=sem_wait(&info->sema)) != 0) {
+    //   printf("Failed to wait for task, error %d, will keep trying \n", errno);
+    //   continue;
+    // }
+    Task_Queue* tq = grab_task(CONT_TASK);
+    if (tq) {
+      // printf("Thread %d grabbed tasks of size %d \n", thread->tid, tq->num_tasks);
+      // private queue. TODO: work stealing will change the story   
+      thread->queue = tq;
+      Task* task = tq->start;
+      while(task != NULL) {
+        Task* next = task->next;
+        task->func(task->aux);
+        free(task);
+        task = next;
+        tq->num_tasks--;
+      }
     }
-    
-    lock(info);
-    /* state might have changed already */
-  task = info->task_queue;
-  info->task_queue = task->next;
-    unlock(info);
-
-    /* task may or may not exist */
-    if (task) {
-      task->func(task->aux);
-      free(task);
-    }
+    thread->queue = NULL; // rethink if storing in thread is even necessary
   }
 }
 
 void lock(Thread* t) {
-  int e = 0;
+  int e;
+  if (t == NULL) {
+    e = pthread_spin_lock(&tasks_lock);
+    goto done;
+  }
+
   if (mutex_flag) 
     e = pthread_mutex_lock(&t->mutex);
   else
     e = pthread_spin_lock(&t->lock);
 
+done:
   if (e != 0) {
     printf("failed to grab the lock, error code %d \n", e);
     exit(1);
@@ -200,12 +237,18 @@ void lock(Thread* t) {
 }
 
 void unlock(Thread* t) {
-  int e = 0;
+  int e;
+  if (t == NULL) {
+    e = pthread_spin_unlock(&tasks_lock);
+    goto done;
+  }
+
   if (mutex_flag) 
     e = pthread_mutex_unlock(&t->mutex);
   else
     e = pthread_spin_unlock(&t->lock);
 
+done:
   if (e != 0) {
     printf("failed to release the lock, error code %d \n", e);
     exit(1);
