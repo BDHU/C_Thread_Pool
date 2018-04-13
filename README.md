@@ -1,5 +1,6 @@
 Thread Pool Proposal
 
+revision: This looks great. One minor revision request: please submit a revised proposal that explicitly lists what graphs you plan to have in your write up so I can have a concrete understanding of your experiment design(s).
 
 Goals: Implement a thread pool that provides the following features:
 *  Reasonable performance compared to Go
