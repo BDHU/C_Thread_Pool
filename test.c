@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include <getopt.h>
+#include <sys/time.h>
 #include "thread.h"
 
 int mutex_flag;
@@ -9,7 +10,6 @@ int mutex_flag;
 void test_fib_serires(void *num_ptr);
 void test1(void* arg) {
   for(int i=0; i<34242440; i++);
-  printf("=============== DONE  test1 ============ \n");
 }
 
 int main(int argc, char** argv) {
@@ -41,15 +41,24 @@ int main(int argc, char** argv) {
 
   // barrier for now?
   // does not wake up till later
+  struct timeval t1, t2;
+  double elapsedTime;
+  // start timer
+  gettimeofday(&t1, NULL);
+
+  int x[10];
   for (int i=0; i<10; i++) {
-    int* x = malloc(sizeof(int));
-    *x = i + 3;
+    // int* x = malloc(sizeof(int));
+    x[i] = i + 3;
     thread_pool_add(test1, NULL);  
-    thread_pool_add(test_fib_serires, x);    
+    thread_pool_add(test_fib_serires, &x[i]); 
   }
   thread_pool_wait();
-  printf("done waiting for jobs \n");
-  // while(1);
+  gettimeofday(&t2, NULL);
+  // compute and print the elapsed time in millisec
+  elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
+  elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+  printf("done waiting for jobs: execution time: %0.5gms\n", elapsedTime);
 }
 
 /* =================== user defined function =================== */
@@ -64,7 +73,7 @@ void test_fib_serires(void *num_ptr) {
     j = j + i;
     i = temp;
   }
-  printf("=============== DONE test_fib_serires ============ \n");  
+  // printf("=============== DONE test_fib_serires ============ \n");  
 }
 
 /* ========================= */
