@@ -23,15 +23,20 @@ void unlock(Thread* t);
 
 Task* task_init(task_func *func, void* aux);
 void task_add(Task* task);
-Task_Queue* grab_task(int num_tasks);
+void grab_task(int num_tasks, Task_Queue** ret);
 
 /* ======================== Thread pool ======================== */
 
 void thread_pool_init(int w, int use_mutex) {
+  static bool initialized = false;
   mutex_flag = use_mutex;
   avail_tasks = NULL;
   last_task = NULL;
   total_tasks = 0;
+
+  // avoid reinitialization of the thread pool
+  if (initialized) 
+    return;
 
   /* set workers to number of processors if not given a defined value */
   workers = w == 0 ? get_nprocs() : w;
@@ -74,19 +79,20 @@ void thread_pool_init(int w, int use_mutex) {
       i--;
     }
   }
+  initialized = true;
 }
 
 /* Wait for threads to finish by checking their task_queues */
 void thread_pool_wait() {
   // may need to use a barrier 
-  while(1);
+  while(total_tasks != 0);
+
   // Note: this only works because there can be on thread callling 
   // thread_pool_wait and thread_pool_add. If we want to allow
   // multiple threads to update, we should add a lock to prevent
   // one from happening when waiting is happening.
-  // for (int i=0; i<workers; i++) 
-  //   while(thread_info[i].queue != NULL);
-  //^ This doesn't work lol
+  for (int i=0; i<workers; i++) 
+    while(thread_info[i].queue != NULL);
 }
 
 bool thread_pool_add(task_func *func, void* aux) {
@@ -121,6 +127,7 @@ Task* task_init(task_func *func, void* aux) {
   return new_task;
 }
 
+// task add will only be executed by one thread
 /* should be used as an internal function */
 void task_add(Task* task) {
   // int e;
@@ -148,9 +155,12 @@ void task_add(Task* task) {
 }
 
 // can specify how many tasks to grab, will do best effort
-Task_Queue* grab_task(int num_tasks) {
-  Task_Queue *t = NULL;     
+void grab_task(int num_tasks, Task_Queue** ret) {
+  if (ret == NULL)
+    return;
+  *ret = NULL;
   
+  Task_Queue *t = NULL;
   lock(NULL);
   if (total_tasks <= 0)
     goto done;
@@ -159,34 +169,32 @@ Task_Queue* grab_task(int num_tasks) {
 
   t->start = avail_tasks;
   t->end = avail_tasks;
-  t->num_tasks = total_tasks;  
   
   if (num_tasks < total_tasks) {
     // take off the first x number of tasks, set avail_tasks to the next entry.
     for (int i=1; i<num_tasks; i++) 
       t->end = t->end->next;
     avail_tasks = t->end->next;
-    // avail_tasks->prev = NULL; // We don't reall use prev, should we get rid of it?
     t->end->next = NULL;  
+    t->num_tasks = num_tasks;
   } else {
     t->end = last_task;
     last_task = NULL;
     avail_tasks = NULL;
+    t->num_tasks = total_tasks; 
   }
-  total_tasks = num_tasks < total_tasks ? total_tasks - num_tasks : 0;
-  t->num_tasks -= total_tasks;
+  *ret = t;
+  __sync_synchronize();  // barrier is necessary here bc w eare busy waiting on total task to be 0
+  total_tasks -= t->num_tasks;
 
 done:
   unlock(NULL);
-  return t;
 }
 
 void* worker_func(void* t) {
   // int e;
   Thread* thread = (Thread*) t;
-  // printf("thread %lu is up and running \n", thread->tid);
 
-  // Task* task = NULL;
   /* grabbing a task from the front of the queue
      assume task is present */
   while(1) {
@@ -199,18 +207,17 @@ void* worker_func(void* t) {
     //   printf("Failed to wait for task, error %d, will keep trying \n", errno);
     //   continue;
     // }
-    Task_Queue* tq = grab_task(CONT_TASK);
-    if (tq) {
+    grab_task(CONT_TASK, &thread->queue);
+    if (thread->queue) {
       // printf("Thread %d grabbed tasks of size %d \n", thread->tid, tq->num_tasks);
       // private queue. TODO: work stealing will change the story   
-      thread->queue = tq;
-      Task* task = tq->start;
+      Task* task = thread->queue->start;
       while(task != NULL) {
         Task* next = task->next;
         task->func(task->aux);
         free(task);
         task = next;
-        tq->num_tasks--;
+        thread->queue->num_tasks--;
       }
     }
     thread->queue = NULL; // rethink if storing in thread is even necessary

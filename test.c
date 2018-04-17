@@ -9,7 +9,7 @@ int mutex_flag;
 void test_fib_serires(void *num_ptr);
 void test1(void* arg) {
   for(int i=0; i<34242440; i++);
-  printf("=============== DONE ============ \n");
+  printf("=============== DONE  test1 ============ \n");
 }
 
 int main(int argc, char** argv) {
@@ -59,11 +59,12 @@ void test_fib_serires(void *num_ptr) {
   int num = *((int *)num_ptr);
   int index = 0;
   for (; index<num; index++) {
-    printf("The %d number: %d\n", index, j);
+    // printf("The %d number: %d\n", index, j);
     int temp = j;
     j = j + i;
     i = temp;
   }
+  printf("=============== DONE test_fib_serires ============ \n");  
 }
 
 /* ========================= */
