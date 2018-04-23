@@ -11,11 +11,11 @@ typedef struct task {
   struct task* next;
 } Task;
 
-// used to hold a segment of tasks
+// used to hold a segment of tasks by each thread
 typedef struct task_queue {
-  int num_tasks;   
-  Task* start;
-  Task* end;
+  int                num_tasks; 
+  Task*              start;
+  Task*              end;
 } Task_Queue; 
 
 typedef struct thread {

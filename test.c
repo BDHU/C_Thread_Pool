@@ -47,14 +47,15 @@ int main(int argc, char** argv) {
   gettimeofday(&t1, NULL);
 
   int x[10];
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<30; i++) {
     // int* x = malloc(sizeof(int));
-    x[i] = i + 3;
+    //x[i] = i + 3;
     thread_pool_add(test1, NULL);  
-    thread_pool_add(test_fib_serires, &x[i]); 
+    //thread_pool_add(test_fib_serires, &x[i]); 
   }
   thread_pool_wait();
   gettimeofday(&t2, NULL);
+  thread_pool_wait();
   // compute and print the elapsed time in millisec
   elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
   elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
