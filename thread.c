@@ -4,7 +4,8 @@
 #include <sys/sysinfo.h>
 #include "thread.h"
 
-#define CONT_TASK 3
+#define CONT_TASK 1
+sem_t task_sema;
 
 /* will probably change to list when the thread number becomes dynamic */
 Thread* thread_info;
@@ -37,6 +38,12 @@ void thread_pool_init(int w, int use_mutex) {
   // avoid reinitialization of the thread pool
   if (initialized) 
     return;
+
+  // initialize global semaphore  
+  if (sem_init(&task_sema, PTHREAD_PROCESS_PRIVATE, 0) != 0) {
+      printf("failed to initialize the semaphore for task \n");
+      exit(1);
+  }  
 
   /* set workers to number of processors if not given a defined value */
   workers = w == 0 ? get_nprocs() : w;
@@ -149,7 +156,8 @@ void task_add(Task* task) {
 
   last_task = task;
   unlock(NULL);
-  
+  // notify
+  sem_post(&task_sema);
   // if ((e=sem_post(&info->sema)) != 0) 
   //   printf("Failed to add task, error %d, will keep trying \n", errno);
 }
@@ -160,6 +168,7 @@ void grab_task(int num_tasks, Task_Queue** ret) {
     return;
   *ret = NULL;
   
+  sem_wait(&task_sema);
   Task_Queue *t = NULL;
   lock(NULL);
   if (total_tasks <= 0)
@@ -199,7 +208,7 @@ void* worker_func(void* t) {
      assume task is present */
   while(1) {
     // back to busy waiting for now
-    while(avail_tasks == NULL);
+    // while(avail_tasks == NULL);
 
     // NOTE: need to consider the interaction of sem_wait and 
     // future work stealing algorithm
