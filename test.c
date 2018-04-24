@@ -44,14 +44,11 @@ int main(int argc, char** argv) {
   struct timeval t1, t2;
   double elapsedTime;
   // start timer
-  gettimeofday(&t1, NULL);
-
-  int x[10];
+  gettimeofday(&t1, NULL);  
   for (int i=0; i<10; i++) {
     // int* x = malloc(sizeof(int));
-    x[i] = i + 3;
     thread_pool_add(test1, NULL);  
-    thread_pool_add(test_fib_serires, &x[i]); 
+    thread_pool_add(test_fib_serires, (void*) (i+3)); 
   }
   thread_pool_wait();
   gettimeofday(&t2, NULL);
@@ -62,10 +59,10 @@ int main(int argc, char** argv) {
 }
 
 /* =================== user defined function =================== */
-void test_fib_serires(void *num_ptr) {
+void test_fib_serires(void * n) {
   int i = 0;
   int j = 1;
-  int num = *((int *)num_ptr);
+  int num = (int) n;
   int index = 0;
   for (; index<num; index++) {
     // printf("The %d number: %d\n", index, j);

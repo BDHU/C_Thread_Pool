@@ -13,18 +13,19 @@ Task* avail_tasks; // global queue for tasks
 Task* last_task;
 int workers;
 int mutex_flag;
+int curr_worker;
 
 /* guard access to task_queue */
 pthread_spinlock_t tasks_lock;     
-int total_tasks;   
+// int total_tasks;   
 
 void* worker_func(void* t);
 void lock(Thread* t);
 void unlock(Thread* t);
 
 Task* task_init(task_func *func, void* aux);
-void task_add(Task* task);
-void grab_task(int num_tasks, Task_Queue** ret);
+void assign_task(Task* task);
+// void grab_task(int num_tasks, Task_Queue** ret);
 
 /* ======================== Thread pool ======================== */
 
@@ -33,7 +34,8 @@ void thread_pool_init(int w, int use_mutex) {
   mutex_flag = use_mutex;
   avail_tasks = NULL;
   last_task = NULL;
-  total_tasks = 0;
+  curr_worker = 0;
+  // total_tasks = 0;
 
   // avoid reinitialization of the thread pool
   if (initialized) 
@@ -63,7 +65,7 @@ void thread_pool_init(int w, int use_mutex) {
   }
 
   for (int i=0; i<workers; i++) {
-    if ((e=sem_init(&thread_info[i].sema, PTHREAD_PROCESS_PRIVATE, 0)) != 0) {
+    if ((e=sem_init(&thread_info[i].task_sema, PTHREAD_PROCESS_PRIVATE, 0)) != 0) {
       printf("failed to initialize the semaphore for thread %d, error code %d\n", i, e);
       i--;
       continue;
@@ -92,14 +94,14 @@ void thread_pool_init(int w, int use_mutex) {
 /* Wait for threads to finish by checking their task_queues */
 void thread_pool_wait() {
   // may need to use a barrier 
-  while(total_tasks != 0);
+  // while(total_tasks != 0);
 
   // Note: this only works because there can be on thread callling 
   // thread_pool_wait and thread_pool_add. If we want to allow
   // multiple threads to update, we should add a lock to prevent
   // one from happening when waiting is happening.
   for (int i=0; i<workers; i++) 
-    while(thread_info[i].queue != NULL);
+    while(thread_info[i].queue.num_tasks != 0);
 }
 
 bool thread_pool_add(task_func *func, void* aux) {
@@ -107,7 +109,7 @@ bool thread_pool_add(task_func *func, void* aux) {
   if (t == NULL) {
     return false;
   }
-  task_add(t);
+  assign_task(t);
   return true;
 }
 
@@ -134,102 +136,104 @@ Task* task_init(task_func *func, void* aux) {
   return new_task;
 }
 
-// task add will only be executed by one thread
-/* should be used as an internal function */
-void task_add(Task* task) {
-  // int e;
+// void grab_task(int num_tasks, Task_Queue** ret) {
+//   if (ret == NULL)
+//     return;
+//   *ret = NULL;
+  
+//   sem_wait(&task_sema);
+//   Task_Queue *t = NULL;
+//   lock(NULL);
+//   if (total_tasks <= 0)
+//     goto done;
+//   if ((t = malloc(sizeof(Task_Queue))) == NULL)
+//     goto done;
 
+//   t->start = avail_tasks;
+//   t->end = avail_tasks;
+  
+//   if (num_tasks < total_tasks) {
+//     // take off the first x number of tasks, set avail_tasks to the next entry.
+//     for (int i=1; i<num_tasks; i++) 
+//       t->end = t->end->next;
+//     avail_tasks = t->end->next;
+//     t->end->next = NULL;  
+//     t->num_tasks = num_tasks;
+//   } else {
+//     t->end = last_task;
+//     last_task = NULL;
+//     avail_tasks = NULL;
+//     t->num_tasks = total_tasks; 
+//   }
+//   *ret = t;
+//   __sync_synchronize();  // barrier is necessary here bc w eare busy waiting on total task to be 0
+//   total_tasks -= t->num_tasks;
+
+// done:
+//   unlock(NULL);
+// }
+
+
+// task add will only be executed by one thread
+// should be used as an internal function 
+void assign_task(Task* task) {
+  int e;
   if (task == NULL) {
     printf("Warning: you have either a NULL task \n");
     return;
   }
   
-  lock(NULL);
-  total_tasks++;
-
-  if (avail_tasks == NULL) {
-    avail_tasks = task;
+  // total_tasks++;
+  Thread* t = &thread_info[curr_worker];
+  lock(t);
+  if (t->queue.num_tasks == 0) {
+    // if queue is empty
+    t->queue.start = t->queue.end = task;
   } else {
-    task->prev = last_task;
-    last_task->next = task;
+    t->queue.end->next = task;
+    t->queue.end = task;
   }
+  t->queue.num_tasks++;
+  unlock(t);
 
-  last_task = task;
-  unlock(NULL);
-  // notify
-  sem_post(&task_sema);
-  // if ((e=sem_post(&info->sema)) != 0) 
-  //   printf("Failed to add task, error %d, will keep trying \n", errno);
-}
-
-// can specify how many tasks to grab, will do best effort
-void grab_task(int num_tasks, Task_Queue** ret) {
-  if (ret == NULL)
-    return;
-  *ret = NULL;
-  
-  sem_wait(&task_sema);
-  Task_Queue *t = NULL;
-  lock(NULL);
-  if (total_tasks <= 0)
-    goto done;
-  if ((t = malloc(sizeof(Task_Queue))) == NULL)
-    goto done;
-
-  t->start = avail_tasks;
-  t->end = avail_tasks;
-  
-  if (num_tasks < total_tasks) {
-    // take off the first x number of tasks, set avail_tasks to the next entry.
-    for (int i=1; i<num_tasks; i++) 
-      t->end = t->end->next;
-    avail_tasks = t->end->next;
-    t->end->next = NULL;  
-    t->num_tasks = num_tasks;
-  } else {
-    t->end = last_task;
-    last_task = NULL;
-    avail_tasks = NULL;
-    t->num_tasks = total_tasks; 
-  }
-  *ret = t;
-  __sync_synchronize();  // barrier is necessary here bc w eare busy waiting on total task to be 0
-  total_tasks -= t->num_tasks;
-
-done:
-  unlock(NULL);
+  if ((e=sem_post(&t->task_sema)) != 0) 
+    printf("Failed to add task, error %d, will keep trying \n", errno);
+  curr_worker = ((curr_worker+1) % workers);
 }
 
 void* worker_func(void* t) {
-  // int e;
+  int e;
   Thread* thread = (Thread*) t;
 
   /* grabbing a task from the front of the queue
      assume task is present */
   while(1) {
-    // back to busy waiting for now
-    // while(avail_tasks == NULL);
-
     // NOTE: need to consider the interaction of sem_wait and 
     // future work stealing algorithm
-    // if ((e=sem_wait(&info->sema)) != 0) {
-    //   printf("Failed to wait for task, error %d, will keep trying \n", errno);
-    //   continue;
-    // }
-    grab_task(CONT_TASK, &thread->queue);
-    if (thread->queue) {
-      // printf("Thread %d grabbed tasks of size %d \n", thread->tid, tq->num_tasks);
-      // private queue. TODO: work stealing will change the story   
-      Task* task = thread->queue->start;
-      while(task != NULL) {
-        Task* next = task->next;
-        task->func(task->aux);
-        free(task);
-        task = next;
-        thread->queue->num_tasks--;
-      }
+
+    // ummm work stealing is gonna be weird lol
+    // but whatever, it will be fine.
+
+    // wait for task first
+    if ((e=sem_wait(&thread->task_sema)) != 0) {
+      printf("Failed to wait for task, error %d, will keep trying \n", errno);
+      continue;
     }
-    thread->queue = NULL; // rethink if storing in thread is even necessary
+
+    // grab_task(CONT_TASK, &thread->queue);
+    // printf("Thread %d grabbed tasks of size %d \n", thread->tid, tq->num_tasks);
+    Task* task = NULL;
+    lock(thread);
+    task = thread->queue.start;
+    thread->queue.num_tasks--;
+    thread->queue.start = task->next;
+    if (thread->queue.num_tasks == 0) {
+      thread->queue.end = NULL;
+    }
+    unlock(thread);
+
+    task->func(task->aux);
+    free(task);
   }
 }
 

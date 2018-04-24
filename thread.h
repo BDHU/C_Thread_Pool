@@ -22,8 +22,8 @@ typedef struct thread {
   pthread_t          tid;
   pthread_spinlock_t lock;        /* guard access to task_queue */
   pthread_mutex_t    mutex;
-  sem_t              sema;        /* use to notify task is there */
-  Task_Queue*        queue;
+  sem_t              task_sema;        /* use to notify task is there */
+  Task_Queue         queue;
 } Thread;
 
 typedef struct daemon {
