@@ -190,8 +190,10 @@ void assign_task(Task* task) {
     // if queue is empty
     t->queue.start = t->queue.end = task;
   } else {
+    Task *tmp = t->queue.end;
     t->queue.end->next = task;
     t->queue.end = task;
+    t->queue.end->prev = tmp;
   }
   t->queue.num_tasks++;
   unlock(t);
