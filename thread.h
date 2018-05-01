@@ -23,7 +23,10 @@ typedef struct thread {
   pthread_spinlock_t lock;        /* guard access to task_queue */
   pthread_mutex_t    mutex;
   sem_t              task_sema;        /* use to notify task is there */
+  sem_t              wait_sema;        /* use to notify task is there */
   Task_Queue         queue;
+  int count;
+  int max;
 } Thread;
 
 typedef struct daemon {

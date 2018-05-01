@@ -9,7 +9,7 @@ int mutex_flag;
 
 void test_fib_serires(void *num_ptr);
 void test1(void* arg) {
-  for(int i=0; i<34242440; i++);
+  for(int i=0; i<10000; i++);
 }
 
 int main(int argc, char** argv) {
@@ -25,6 +25,8 @@ int main(int argc, char** argv) {
   // parse arguments
   while ((o = getopt_long_only(argc, argv, "w:", opts, NULL)) != -1 ) {
     switch (o) {
+      case 0:
+      	break;
       case 'w':
         workers = atoi(optarg);
         break;
@@ -34,21 +36,15 @@ int main(int argc, char** argv) {
   }
 
   thread_pool_init(workers, mutex_flag);
-
-
-  // add jobs
-  // need to have a way of knowing when to notify test.c
-
-  // barrier for now?
   // does not wake up till later
   struct timeval t1, t2;
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<100; i++) {
     // int* x = malloc(sizeof(int));
     thread_pool_add(test1, NULL);  
-    thread_pool_add(test_fib_serires, (void*) (i+3)); 
+    thread_pool_add(test_fib_serires, (void*)(i+3)); 
   }
   thread_pool_wait();
   gettimeofday(&t2, NULL);
@@ -65,12 +61,10 @@ void test_fib_serires(void * n) {
   int num = (int) n;
   int index = 0;
   for (; index<num; index++) {
-    // printf("The %d number: %d\n", index, j);
     int temp = j;
     j = j + i;
     i = temp;
   }
-  // printf("=============== DONE test_fib_serires ============ \n");  
 }
 
 /* ========================= */

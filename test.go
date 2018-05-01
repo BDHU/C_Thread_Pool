@@ -13,7 +13,7 @@ func main() {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			for j := 0; j < 34242440; j++ {
+			for j := 0; j < 10000; j++ {
 
 			}
 		}()
@@ -32,6 +32,6 @@ func main() {
 	wg.Wait()
 	t := time.Now()
 	elapsed := t.Sub(start)
-	ms := elapsed.Nanoseconds() / 1000000
-	fmt.Printf("Go execution finished, time is %v mss \n", ms)
+	ms := elapsed.Nanoseconds() / 1000000.0
+	fmt.Printf("Go execution finished, time is %v ms : %v ns \n", ms, elapsed.Nanoseconds())
 }
