@@ -6,28 +6,29 @@ import (
 	"time"
 )
 
+const prime = 4222234741
+
 func main() {
+	test_size := 1000
+	result := make([]int, test_size)
+        for i:=0; i<test_size; i++ {
+		result[i] = i
+	}
+
 	wg := sync.WaitGroup{}
 	start := time.Now()
-	for i := 0; i < 10; i++ {
-		wg.Add(2)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 10000; j++ {
+	for i := 0; i < test_size; i++ {
+		wg.Add(1)
 
-			}
-		}()
-
-		go func(num int) {
+		go func(num *int) {
 			defer wg.Done()
-			a := 0
-			b := 1
-			for index := 0; index < num; index++ {
-				temp := a
-				a = a + b
-				b = temp
+			sum := 0
+			// compute sum 
+			for  x:=1; x<*num; x++ {
+				sum += x;
 			}
-		}(i)
+			*num = (sum * (sum-2)) % prime;
+		}(&result[i])
 	}
 	wg.Wait()
 	t := time.Now()
