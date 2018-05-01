@@ -6,7 +6,10 @@
 #include "thread.h"
 
 int mutex_flag;
+const int prime = 4222234741;
 
+void short_task(void* arg);
+void long_task(void* arg);
 void test_fib_serires(void *num_ptr);
 void test1(void* arg) {
   for(int i=0; i<10000; i++);
@@ -15,6 +18,7 @@ void test1(void* arg) {
 int main(int argc, char** argv) {
   int o;
   int workers = 0;
+  int test_size = 1000;
   // worker can be predefined or set to default
   struct option opts[3] = {
     {"workers", required_argument, NULL, 'w'},
@@ -36,15 +40,20 @@ int main(int argc, char** argv) {
   }
 
   thread_pool_init(workers, mutex_flag);
+  int results[test_size];
+  for (int i=0; i<test_size; i++) {
+    results[i] = i;
+  }
   // does not wake up till later
   struct timeval t1, t2;
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
-  for (int i=0; i<100; i++) {
+  for (int i=0; i<test_size; i++) {
+    thread_pool_add(short_task, results+i);  
     // int* x = malloc(sizeof(int));
-    thread_pool_add(test1, NULL);  
-    thread_pool_add(test_fib_serires, (void*)(i+3)); 
+    // thread_pool_add(test1, NULL);  
+    // thread_pool_add(test_fib_serires, (void*)(i+3)); 
   }
   thread_pool_wait();
   gettimeofday(&t2, NULL);
@@ -120,4 +129,21 @@ void test_redundant_thread_pool_init(void *num) {
   for (; i<*((int *)num); i++) {
     thread_pool_init(*((int *)num), mutex_flag);
   }
+}
+
+// ============== experiment ==================
+
+void long_task(void* arg) {
+
+} 
+
+// compute sum and then hash it
+void short_task(void* arg) {
+  int sum = 0;
+  int* p = (int*) arg;
+  // compute sum 
+  for (int x=1; x<*p; x++) 
+    sum += x;
+
+  *p = (sum * (sum-2)) % prime;
 }

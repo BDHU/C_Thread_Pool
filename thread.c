@@ -24,7 +24,6 @@ void unlock(Thread* t);
 
 Task* task_init(task_func *func, void* aux);
 void assign_task(Task* task);
-// void grab_task(int num_tasks, Task_Queue** ret);
 
 /* ======================== Thread pool ======================== */
 
