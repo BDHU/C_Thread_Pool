@@ -13,3 +13,5 @@ test: test.o thread.c
 
 clean: 
 	rm *.o
+	rm ptest
+	rm ctest

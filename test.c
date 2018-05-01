@@ -60,6 +60,11 @@ int main(int argc, char** argv) {
   // compute and print the elapsed time in millisec
   elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
   elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+
+  // for (int i=0; i<test_size; i++) {
+  //   printf("%d ", results[i]);
+  // }
+
   printf("done waiting for jobs: execution time: %0.5gms\n", elapsedTime);
 }
 
