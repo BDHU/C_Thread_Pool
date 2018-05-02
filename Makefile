@@ -21,5 +21,4 @@ rmo:
 	rm output/tmp-*
 	rm poutput/tmp-*
 	rm pwoutput/tmp-*
-	rm goutput/tmp-*
        

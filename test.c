@@ -3,36 +3,18 @@
 #include<stdio.h>
 #include <getopt.h>
 #include <sys/time.h>
-#include <string.h>
 #include "thread.h"
-
+#include "shared-test.c"
 
 int mutex_flag;
-const int prime = 4222234741;
-const char* data = "A purely peer-to-peer version of electronic cash would allow online\
-payments to be sent directly from one party to another without going through a\
-financial institution. Digital signatures provide part of the solution, but the main\
-benefits are lost if a trusted third party is still required to prevent double-spending.\
-We propose a solution to the double-spending problem using a peer-to-peer network.\
-The network timestamps transactions by hashing them into an ongoing chain of\
-hash-based proof-of-work, forming a record that cannot be changed without redoing\
-the proof-of-work. The longest chain not only serves as proof of the sequence of\
-events witnessed, but proof that it came from the largest pool of CPU power. As\
-long as a majority of CPU power is controlled by nodes that are not cooperating to\
-attack the network, they'll generate the longest chain and outpace attackers. The\
-network itself requires minimal structure. Messages are broadcast on a best effort\
-basis, and nodes can leave and rejoin the network at will, accepting the longest\
-proof-of-work chain as proof of what happened while they were gone. \n";
 
-void short_task(void* arg);
-void long_task(void* arg);
 void test_fib_serires(void *num_ptr);
 void test1(void* arg) {
   for(int i=0; i<10000; i++);
 }
 
 int main(int argc, char** argv) {
-  int o;
+  int c;
   int workers = 0;
   int test_size = 1000;
   // worker can be predefined or set to default
@@ -43,15 +25,15 @@ int main(int argc, char** argv) {
   };
 
   // parse arguments
-  while ((o = getopt_long_only(argc, argv, "w:", opts, NULL)) != -1 ) {
-    switch (o) {
+  while ((c = getopt_long_only(argc, argv, "w:", opts, NULL)) != -1 ) {
+    switch (c) {
       case 0:
       	break;
       case 'w':
         workers = atoi(optarg);
         break;
       default:
-        printf("default case, don't recognize anything %d \n", o);
+        printf("default case, don't recognize anything %d \n", c);
     }
   }
 
@@ -63,9 +45,12 @@ int main(int argc, char** argv) {
 
   int lnum = 0;
   int snum = 0;
-  int lnum_limit = 250;
-  int snum_limit = 750;
-
+ 
+  struct out o[lnum_limit];
+  for (int i=0; i<lnum_limit; i++) {
+    o[i].dir = "output";
+    o[i].arg = i;
+  }
   // set rand
   srand(0);
   // does not wake up till later
@@ -75,23 +60,23 @@ int main(int argc, char** argv) {
   gettimeofday(&t1, NULL);  
   for (int i=0; i<test_size; i++) {
     int x = rand() % 100;
-    if (x<75) {
+    if (x<rate) {
       if (snum < snum_limit) {
         thread_pool_add(short_task, results+snum);  
         snum++;        
       }
     } else {
       if (lnum < lnum_limit) {
-        thread_pool_add(long_task, (void*) lnum);      
-        lnum++;        
+        thread_pool_add(long_task, o+lnum);      
+        lnum++; 
       }
     }
   }
 
   for (int i=snum; i<snum_limit; i++)
     thread_pool_add(short_task, results+i); 
-  for (int i=lnum; i<lnum_limit; i++)
-    thread_pool_add(long_task, (void*) i);      
+  for (int i=lnum; i<lnum_limit; i++) 
+    thread_pool_add(long_task, o+i);
 
   thread_pool_wait();
   gettimeofday(&t2, NULL);
@@ -172,33 +157,4 @@ void test_redundant_thread_pool_init(void *num) {
   for (; i<*((int *)num); i++) {
     thread_pool_init(*((int *)num), mutex_flag);
   }
-}
-
-// ============== experiment ==================
-
-void long_task(void* arg) {
-  char buf[30];
-  snprintf(buf, 30, "output/tmp-%d", (int)arg);
-  
-  FILE *f = fopen(buf, "w+");
-  if (!f) {
-    printf("Failed to create file \n");
-    return;
-  }
-
-  size_t size = strlen(data)+1;
-  size_t wsize = fwrite(data, 1, size, f);
-  if (wsize != size)
-    printf("Failed to write %lu bytes, only wrote %lu \n", size, wsize);
-} 
-
-// compute sum and then hash it
-void short_task(void* arg) {
-  int sum = 0;
-  int* p = (int*) arg;
-  // compute sum 
-  for (int x=1; x<*p; x++) 
-    sum += x;
-
-  *p = (sum * (sum-2)) % prime;
 }

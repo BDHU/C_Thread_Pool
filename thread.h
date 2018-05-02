@@ -2,7 +2,7 @@
 #include <semaphore.h>
 #include <stdbool.h>
 
-typedef void task_func (void *aux);
+typedef void* task_func (void *aux);
 
 typedef struct task {
   void*        aux;               /* pointer to arguments of the task */

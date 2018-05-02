@@ -196,13 +196,6 @@ void* worker_func(void* t) {
     task = thread->queue.start;
     thread->queue.num_tasks--;
     thread->queue.start = task->next;
-  /*  if (thread->queue.num_tasks == 0) {
-      thread->count++;
-      thread->queue.end = NULL;
-    } else {
-      if (thread->queue.num_tasks > thread->max) 
-      	thread->max = thread->queue.num_tasks;
-    }*/
     }
     unlock(thread);
     
