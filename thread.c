@@ -16,7 +16,6 @@ int curr_worker;
 
 /* guard access to task_queue */
 pthread_spinlock_t tasks_lock;     
-// int total_tasks;   
 
 void* worker_func(void* t);
 void lock(Thread* t);
@@ -34,7 +33,7 @@ void thread_pool_init(int w, int use_mutex) {
   last_task = NULL;
   curr_worker = 0;
 
-  // avoid reinitialization of the thread pool
+  /* avoid reinitialization of the thread pool */
   if (initialized) 
     return;
 
@@ -62,7 +61,7 @@ void thread_pool_init(int w, int use_mutex) {
       continue;
     }
 
-    sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
+    //sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
     
     if ((e=pthread_mutex_init(&thread_info[i].mutex, NULL)) != 0) {
       printf("failed to initialize the mutex for thread %d, error code %d\n", i, e);
@@ -92,14 +91,12 @@ void thread_pool_wait() {
   // one from happening when waiting is happening.
   // waiting is not proper
   for (int i=0; i<workers; i++) {
-   // while(thread_info[i].queue.num_tasks != 0);
-   // printf("thread %d had %d many 1 task, max task %d \n", i,thread_info[i].count, thread_info[i].max+1);
-  //  }
      thread_info[i].count = 1;
+     // why is taks sema needed here
      sem_post(&thread_info[i].task_sema);
      sem_wait(&thread_info[i].wait_sema);
      thread_info[i].count = 0;
-     }
+  }
 }
 
 bool thread_pool_add(task_func *func, void* aux) {
@@ -185,8 +182,6 @@ void* worker_func(void* t) {
       continue;
     }
 
-    // grab_task(CONT_TASK, &thread->queue);
-    // printf("Thread %d grabbed tasks of size %d \n", thread->tid, tq->num_tasks);
     Task* task = NULL;
     lock(thread);
     if (thread->queue.num_tasks == 0 && thread->count > 0) 

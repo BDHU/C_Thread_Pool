@@ -1,11 +1,12 @@
 #include <string.h>
+
 void* short_task(void* arg);
 void* long_task(void* arg);
 void* empty_task(void* arg);
 
-int lnum_limit = 250;
-int snum_limit = 750;
-int rate = 75;
+int rate = 100;
+int lnum_limit = 0;
+int snum_limit = 1000;
 
 const int prime = 4222234741;
 const char* data = "A purely peer-to-peer version of electronic cash would allow online\

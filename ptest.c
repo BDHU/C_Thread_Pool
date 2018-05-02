@@ -15,7 +15,7 @@ int mutex_flag;
 //   int lstart;
 // };
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) {  
   int test_size = 1000;
   
   srand(0);
@@ -45,40 +45,54 @@ int main(int argc, char** argv) {
   gettimeofday(&t1, NULL);  
   
   for (int i=0; i<test_size; i++) {
+    if (lnum >= lnum_limit) {
+      if (pthread_create(&tids1[snum], NULL, short_task, results+snum) != 0) {
+        printf("failed to create thread %d \n", i);
+        exit(1);
+      }
+      snum++;
+      continue;
+    }
+    if (snum >= snum_limit) {
+      if (pthread_create(&tids2[lnum], NULL, long_task, o+lnum) != 0) {
+        printf("failed to create thread %d \n", i);
+        exit(1);
+      }
+      lnum++;
+      continue;
+    }
+
     int x = rand() % 100;
-    if (x<rate) {
-      if (snum < snum_limit) {
-        if (pthread_create(&tids1[snum], NULL, short_task, results+snum) != 0) {
-          printf("failed to create thread %d \n", i);
-          exit(1);
-        }
-        snum++;        
-      }
+    if (x<rate || lnum >= lnum_limit) {
+      if (pthread_create(&tids1[snum], NULL, short_task, results+snum) != 0) {
+        printf("failed to create thread %d \n", i);
+        exit(1);
+      } 
+      snum++;        
     } else {
-      if (lnum < lnum_limit) {
-        if (pthread_create(&tids2[lnum], NULL, long_task, o+lnum) != 0) {
-          printf("failed to create thread %d \n", i);
-          exit(1);
-        }
-        lnum++; 
+      if (pthread_create(&tids2[lnum], NULL, long_task, o+lnum) != 0) {
+        printf("failed to create thread %d \n", i);
+        exit(1);
       }
+      lnum++;
     }
   }
 
-  for (int i=snum; i<snum_limit; i++) {
-    if (pthread_create(&tids1[i], NULL, short_task, results+i) != 0) {
-      printf("failed to create thread %d \n", i);
-      exit(1);
-    }
-  }
+  // for (int i=snum; i<snum_limit; i++) {
+  //   if (pthread_create(&tids1[i], NULL, short_task, results+i) != 0) {
+  //     printf("failed to create thread %d \n", i);
+  //     exit(1);
+  //   }
+  // }
 
-  for (int i=lnum; i<lnum_limit; i++) {
-    if (pthread_create(&tids2[i], NULL, long_task, o+i) != 0) {
-      printf("failed to create thread %d \n", i);
-      exit(1);
-    }
-  }
+  // for (int i=lnum; i<lnum_limit; i++) {
+  //   if (pthread_create(&tids2[i], NULL, long_task, o+i) != 0) {
+  //     printf("failed to create thread %d \n", i);
+  //     exit(1);
+  //   }
+  // }
   
+  printf("current snum %d, lnum %d \n", snum, lnum);
   for (int i=0; i<snum_limit; i++) {
     if (pthread_join(tids1[i], NULL) != 0) {
       printf("failed to wait thread %d \n", i);
@@ -96,6 +110,10 @@ int main(int argc, char** argv) {
   elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
   elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
   printf("done waiting for jobs: execution time: %0.5gms\n", elapsedTime);
+
+  // for (int i=0; i<snum_limit; i++) {
+  //   printf("%d ", results[i]);
+  // }
 }
 
 // ============== experiment ==================

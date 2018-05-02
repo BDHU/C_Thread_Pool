@@ -16,11 +16,15 @@ void test1(void* arg) {
 int main(int argc, char** argv) {
   int c;
   int workers = 0;
-  int test_size = 1000;
+  int test_size = 1000;  
+
+  char test_type[10] = ""; 
+
   // worker can be predefined or set to default
-  struct option opts[3] = {
+  struct option opts[4] = {
     {"workers", required_argument, NULL, 'w'},
     {"mutex", no_argument, &mutex_flag, 1},
+    {"test", required_argument, NULL, 'w'},
     { NULL, 0, NULL, 0}
   };
 
@@ -31,6 +35,9 @@ int main(int argc, char** argv) {
       	break;
       case 'w':
         workers = atoi(optarg);
+        break;
+      case 't':
+        strcpy(test_type, optarg);
         break;
       default:
         printf("default case, don't recognize anything %d \n", c);
@@ -59,24 +66,32 @@ int main(int argc, char** argv) {
   // start timer
   gettimeofday(&t1, NULL);  
   for (int i=0; i<test_size; i++) {
+    if (lnum >= lnum_limit) {
+      thread_pool_add(short_task, results+snum);  
+      snum++;  
+      continue;
+    }
+    if (snum >= snum_limit) {
+      thread_pool_add(long_task, o+lnum);      
+      lnum++; 
+      continue;
+    }
+
     int x = rand() % 100;
     if (x<rate) {
-      if (snum < snum_limit) {
-        thread_pool_add(short_task, results+snum);  
-        snum++;        
-      }
+      thread_pool_add(short_task, results+snum);  
+      snum++;        
     } else {
-      if (lnum < lnum_limit) {
-        thread_pool_add(long_task, o+lnum);      
-        lnum++; 
-      }
+      thread_pool_add(long_task, o+lnum);      
+      lnum++; 
     }
   }
 
-  for (int i=snum; i<snum_limit; i++)
-    thread_pool_add(short_task, results+i); 
-  for (int i=lnum; i<lnum_limit; i++) 
-    thread_pool_add(long_task, o+i);
+  printf("current snum %d, lnum %d \n", snum, lnum);  
+  // for (int i=snum; i<snum_limit; i++)
+  //   thread_pool_add(short_task, results+i); 
+  // for (int i=lnum; i<lnum_limit; i++) 
+  //   thread_pool_add(long_task, o+i);
 
   thread_pool_wait();
   gettimeofday(&t2, NULL);
@@ -84,7 +99,7 @@ int main(int argc, char** argv) {
   elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
   elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
 
-  // for (int i=0; i<test_size; i++) {
+  // for (int i=0; i<snum_limit; i++) {
   //   printf("%d ", results[i]);
   // }
 

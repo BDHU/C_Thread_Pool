@@ -20,21 +20,27 @@ void* worker_func(void* arg);
 int main(int argc, char** argv) {
   int o;
   int workers = 0;
-  int test_size = 1000;
+  int test_size = 1000;  
+  char test_type[10];
+
   // worker can be predefined or set to default
-  struct option opts[3] = {
+  struct option opts[4] = {
     {"workers", required_argument, NULL, 'w'},
     {"mutex", no_argument, &mutex_flag, 1},
+    {"test", required_argument, NULL, 't'},
     { NULL, 0, NULL, 0}
   };
 
   // parse arguments
-  while ((o = getopt_long_only(argc, argv, "w:", opts, NULL)) != -1 ) {
+  while ((o = getopt_long_only(argc, argv, "wt:", opts, NULL)) != -1 ) {
     switch (o) {
       case 0:
       	break;
       case 'w':
         workers = atoi(optarg);
+        break;
+      case 't':
+        strcpy(test_type, optarg);
         break;
       default:
         printf("default case, don't recognize anything %d \n", o);
@@ -57,7 +63,7 @@ int main(int argc, char** argv) {
   // start timer
   gettimeofday(&t1, NULL);  
   int work_assigned = 0;
-  int average_load = lnum / workers;
+  int average_load = test_size / workers;
   for (int i=0; i<workers; i++) {
     work[i].start = results + work_assigned;
     work[i].size = average_load;
