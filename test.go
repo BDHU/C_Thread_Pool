@@ -2,16 +2,31 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
 
 const prime = 4222234741
+const data = `A purely peer-to-peer version of electronic cash would allow online
+payments to be sent directly from one party to another without going through a
+financial institution. Digital signatures provide part of the solution, but the main
+benefits are lost if a trusted third party is still required to prevent double-spending.
+We propose a solution to the double-spending problem using a peer-to-peer network.
+The network timestamps transactions by hashing them into an ongoing chain of
+hash-based proof-of-work, forming a record that cannot be changed without redoing
+the proof-of-work. The longest chain not only serves as proof of the sequence of
+events witnessed, but proof that it came from the largest pool of CPU power. As
+long as a majority of CPU power is controlled by nodes that are not cooperating to
+attack the network, they'll generate the longest chain and outpace attackers. The
+network itself requires minimal structure. Messages are broadcast on a best effort
+basis, and nodes can leave and rejoin the network at will, accepting the longest
+proof-of-work chain as proof of what happened while they were gone. \n`
 
 func main() {
 	test_size := 1000
 	result := make([]int, test_size)
-        for i:=0; i<test_size; i++ {
+	for i := 0; i < test_size; i++ {
 		result[i] = i
 	}
 
@@ -23,12 +38,33 @@ func main() {
 		go func(num *int) {
 			defer wg.Done()
 			sum := 0
-			// compute sum 
-			for  x:=1; x<*num; x++ {
-				sum += x;
+			// compute sum
+			for x := 1; x < *num; x++ {
+				sum += x
 			}
-			*num = (sum * (sum-2)) % prime;
+			*num = (sum * (sum - 2)) % prime
 		}(&result[i])
+
+		wg.Add(1)
+		go func(arg int) {
+			defer wg.Done()
+
+			f, err := os.Create(fmt.Sprintf("goutput/tmp-%d", arg))
+			if err != nil {
+				fmt.Println("Failed to create")
+				return
+			}
+
+			wsize, err := f.WriteString(data)
+			if err != nil {
+				fmt.Println("Failed to write string")
+				return
+			}
+			if wsize < len(data) {
+				fmt.Printf("Failed to write all data expected %v, written %v \n", len(data), wsize)
+			}
+		}(i)
+
 	}
 	wg.Wait()
 	t := time.Now()
