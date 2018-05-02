@@ -60,15 +60,39 @@ int main(int argc, char** argv) {
   for (int i=0; i<test_size; i++) {
     results[i] = i;
   }
+
+  int lnum = 0;
+  int snum = 0;
+  int lnum_limit = 250;
+  int snum_limit = 750;
+
+  // set rand
+  srand(0);
   // does not wake up till later
   struct timeval t1, t2;
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
   for (int i=0; i<test_size; i++) {
-    thread_pool_add(short_task, results+i);  
-    thread_pool_add(long_task, (void*) i);
+    int x = rand() % 100;
+    if (x<75) {
+      if (snum < snum_limit) {
+        thread_pool_add(short_task, results+snum);  
+        snum++;        
+      }
+    } else {
+      if (lnum < lnum_limit) {
+        thread_pool_add(long_task, (void*) lnum);      
+        lnum++;        
+      }
+    }
   }
+
+  for (int i=snum; i<snum_limit; i++)
+    thread_pool_add(short_task, results+i); 
+  for (int i=lnum; i<lnum_limit; i++)
+    thread_pool_add(long_task, (void*) i);      
+
   thread_pool_wait();
   gettimeofday(&t2, NULL);
   // compute and print the elapsed time in millisec

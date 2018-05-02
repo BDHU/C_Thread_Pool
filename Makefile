@@ -15,7 +15,7 @@ test:
 	$(CC) -o wtest pworkertest.c $(FLAGS)
 	./wtest
 	./wtest
-clean: rmo
+clean: 
 	rm *test
 rmo:
 	rm output/tmp-*
