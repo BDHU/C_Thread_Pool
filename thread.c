@@ -240,33 +240,15 @@ bool steal_work(Thread *t, unsigned int *seed) {
 void* worker_func(void* t) {
   int e;
   Thread* thread = (Thread*) t;
-  //printf("thread %li\n", thread->tid);
+
   unsigned int seed;
   /* grabbing a task from the front of the queue
      assume task is present */
   while(1) {
-    // NOTE: need to consider the interaction of sem_wait and 
-    // future work stealing algorithm
-
-    // ummm work stealing is gonna be weird lol
-    // but whatever, it will be fine.
-
-    /* try to get a task */
-    //if ((e=sem_trywait(&thread->task_sema)) != 0) {
-    //  printf("Failed to wait for task, error %d, will keep trying \n", errno);
-    //  continue;
-    //}
-  
-
-    // if we failed to decrement the semaphore,
-    // that is, we failed to gain the resource to execuet
-    // the task
-    // if no tasks exists
-int times = 0;
+    int times = 0;
     if (sem_trywait(&thread->task_sema) != 0) {
       int i = 0;
       while (true) {
-      //for (; i < workers/ 2; i++) {
       bool succeed = steal_work(thread, &seed);
         if (succeed) {
           // use try lock if possible
@@ -280,37 +262,17 @@ int times = 0;
       sem_wait(&thread->task_sema);
     } 
 
+    // execute tasks on its own private queue
     Task* task = NULL;
     lock(thread);
     if (thread->queue.num_tasks == 0 && thread->count > 0) 
     {
-      // wait for global signal send by the main thread
-      //if (global_stop == 1) { // check if atomic varible here works
         sem_post(&thread->wait_sema); /* indicates finishing execution */
-        //printf("finished\n\n");
-        break;
-      //}
     } else {
-//<<<<<<< HEAD
       task = thread->queue.start;
       thread->queue.num_tasks--;
       thread->queue.start = task->next;
       task->prev = NULL;
-  /*  if (thread->queue.num_tasks == 0) {
-      thread->count++;
-      thread->queue.end = NULL;
-    } else {
-      if (thread->queue.num_tasks > thread->max) 
-      	thread->max = thread->queue.num_tasks;
-    }*/
-
-
-      // maybe try random stealing here
-/*=======
-    task = thread->queue.start;
-    thread->queue.num_tasks--;
-    thread->queue.start = task->next;
->>>>>>> 05fe20000289860ff2caeeb697cd3cdcac5c2508 */
     }
     unlock(thread);
     
