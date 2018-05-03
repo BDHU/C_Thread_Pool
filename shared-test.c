@@ -5,9 +5,9 @@ void* long_task(void* arg);
 void* empty_task(void* arg);
 void test1(void* arg);
 
-int rate = 80;
-int lnum_limit = 200;
-int snum_limit = 800;
+int rate = 25;
+int lnum_limit = 750;
+int snum_limit = 250;
 
 const int prime = 4222234741;
 const char* data = "A purely peer-to-peer version of electronic cash would allow online\
@@ -64,6 +64,6 @@ void* empty_task(void* arg) {
   return NULL;
 }
 
-void test1(void* arg) {
-  for(int i=0; i<1000000; i++);
-}
+// void test1(void* arg) {
+//   for(int i=0; i<1000000; i++);
+// }

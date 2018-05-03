@@ -1,4 +1,6 @@
 // test program
+#define _GNU_SOURCE
+
 #include<stdlib.h>
 #include<stdio.h>
 #include <getopt.h>
@@ -107,7 +109,10 @@ int main(int argc, char** argv) {
 
   int work_assigned = 0;
   int average_load = test_size / workers;
+
+  cpu_set_t cpuset[workers];
   for (int i=0; i<workers; i++) {
+    CPU_ZERO(&cpuset[i]);    
     work[i].start = work_assigned;
     work_assigned += average_load;
     work[i].end = work_assigned;
@@ -118,6 +123,8 @@ int main(int argc, char** argv) {
     if (pthread_create(&work[i].tid, NULL, worker_func, work+i) != 0) {
       printf("failed to create thread %d \n", i);
     }
+    CPU_SET(i, &cpuset[i]);    
+    pthread_setaffinity_np(work[i].tid, sizeof(cpu_set_t), &cpuset[i]);
   }
 
   for (int i=0; i<workers; i++) {

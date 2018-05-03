@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 
   int lnum = 0;
   int snum = 0;
-  
+
   pthread_t tids1[snum_limit];
   pthread_t tids2[lnum_limit];
   int results[snum_limit];
@@ -91,15 +91,3 @@ int main(int argc, char** argv) {
   //   printf("%d ", results[i]);
   // }
 }
-
-// ============== experiment ==================
-
-// void* worker_func(void* arg) {
-//   struct work_load* wl = (struct work_load*)arg;
-//   struct out o;
-//   o.dir = "poutput";
-//   o.arg = wl->lstart;
-//   short_task(wl->start);
-//   long_task(&o);
-//   return NULL;
-// } 

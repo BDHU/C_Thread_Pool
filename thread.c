@@ -1,11 +1,11 @@
+#define _GNU_SOURCE
+
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include "thread.h"
 #include <pthread.h>
-
-#define CONT_TASK 1
 
 /* will probably change to list when the thread number becomes dynamic */
 Thread* thread_info;
@@ -36,9 +36,13 @@ void thread_pool_init(int w, int use_mutex) {
   if (initialized) 
     return;
 
+    
   /* set workers to number of processors if not given a defined value */
-  workers = w == 0 ? get_nprocs() : w;
+  int proc = get_nprocs();
+  workers = w == 0 ? proc : w;
   printf("Initializing thread pool with %d threads, mutex %d \n", workers, use_mutex);  
+  
+  // cpu_set_t cpuset[workers];
   
   /* initialize threads info */
   thread_info = calloc(workers, sizeof(Thread)); 
@@ -77,7 +81,7 @@ void thread_pool_init(int w, int use_mutex) {
     if (pthread_create(&thread_info[i].tid, NULL, worker_func, &thread_info[i]) != 0) {
       printf("failed to create thread %d \n", i);
       i--;
-    }
+    }  
   }
   initialized = true;
 }
@@ -158,7 +162,7 @@ Task* task_init(task_func *func, void* aux) {
 // task add will only be executed by one thread
 // should be used as an internal function 
 void assign_task(Task* task) {
-  // static int x =0;
+  static int x =0;
   int e;
   if (task == NULL) {
     printf("Warning: you have either a NULL task \n");
@@ -182,8 +186,8 @@ void assign_task(Task* task) {
   if ((e=sem_post(&t->task_sema)) != 0) 
     printf("Failed to add task, error %d, will keep trying \n", errno);
 
-//   x++;
-//  if ((x%10) == 0)
+  x++;
+ if ((x%10) == 0)
    curr_worker = ((curr_worker+1) % workers);
 }
 

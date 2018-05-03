@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   struct timeval t1, t2;
   double elapsedTime;
   // start timer
-  gettimeofday(&t1, NULL);  
+  gettimeofday(&t1, NULL);    
   for (int i=0; i<test_size; i++) {
     if (lnum >= lnum_limit) {
       thread_pool_add(short_task, results+snum, NonBlocking);  
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
       thread_pool_add(short_task, results+snum, NonBlocking);  
       snum++;        
     } else {
-      thread_pool_add(long_task, o+lnum, Blocking);      
+    thread_pool_add(long_task, o+lnum, Blocking);      
       lnum++; 
     }
   }
