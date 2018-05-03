@@ -1,24 +1,24 @@
 CC=gcc
 FLAGS=-Wall -pthread
 
-all: test
-
-run: test
-
-test:  
+all:	test
+test: 
+	mkdir output
+	mkdir poutput
+	mkdir pwoutput
 	$(CC) -o ctest test.c thread.c $(FLAGS)
-	./ctest
-	./ctest
 	$(CC) -o ptest ptest.c $(FLAGS)
-	./ptest
-	./ptest
 	$(CC) -o wtest pworkertest.c $(FLAGS)
+	./ptest
+	./ptest
 	./wtest
 	./wtest
+	./ctest
+	./ctest
+
 clean: 
 	rm *test
-rmo:
-	rm output/tmp-*
-	rm poutput/tmp-*
-	rm pwoutput/tmp-*
+	rm -rf output
+	rm -rf poutput
+	rm -rf pwoutput
        

@@ -63,7 +63,3 @@ void* short_task(void* arg) {
 void* empty_task(void* arg) {
   return NULL;
 }
-
-// void test1(void* arg) {
-//   for(int i=0; i<1000000; i++);
-// }
