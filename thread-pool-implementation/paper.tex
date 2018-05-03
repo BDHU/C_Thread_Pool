@@ -1,24 +1,5 @@
 \documentclass[journal, a4paper]{IEEEtran}
 
-% some very useful LaTeX packages include:
-
-%\usepackage{cite}      % Written by Donald Arseneau
-                        % V1.6 and later of IEEEtran pre-defines the format
-                        % of the cite.sty package \cite{} output to follow
-                        % that of IEEE. Loading the cite package will
-                        % result in citation numbers being automatically
-                        % sorted and properly "ranged". i.e.,
-                        % [1], [9], [2], [7], [5], [6]
-                        % (without using cite.sty)
-                        % will become:
-                        % [1], [2], [5]--[7], [9] (using cite.sty)
-                        % cite.sty's \cite will automatically add leading
-                        % space, if needed. Use cite.sty's noadjust option
-                        % (cite.sty V3.8 and later) if you want to turn this
-                        % off. cite.sty is already installed on most LaTeX
-                        % systems. The latest version can be obtained at:
-                        % http://www.ctan.org/tex-archive/macros/latex/contrib/supported/cite/
-
 \usepackage{graphicx}   % Written by David Carlisle and Sebastian Rahtz
                         % Required if you want graphics, photos, etc.
                         % graphicx.sty is already installed on most LaTeX
@@ -29,7 +10,7 @@
                         % Imported Graphics in LaTeX2e" by Keith Reckdahl
                         % which can be found as esplatex.ps and epslatex.pdf
                         % at: http://www.ctan.org/tex-archive/info/
-
+\usepackage{xcolor}
 %\usepackage{psfrag}    % Written by Craig Barratt, Michael C. Grant,
                         % and David Carlisle
                         % This package allows you to substitute LaTeX
@@ -90,18 +71,10 @@
                         % midfloat.sty package (by the same author) as IEEE
                         % does not format its papers in such ways.
 
-\usepackage{amsmath}    % From the American Mathematical Society
-                        % A popular package that provides many helpful commands
-                        % for dealing with mathematics. Note that the AMSmath
-                        % package sets \interdisplaylinepenalty to 10000 thus
-                        % preventing page breaks from occurring within multiline
-                        % equations. Use:
-%\interdisplaylinepenalty=2500
-                        % after loading amsmath to restore such page breaks
-                        % as IEEEtran.cls normally does. amsmath.sty is already
-                        % installed on most LaTeX systems. The latest version
-                        % and documentation can be obtained at:
-                        % http://www.ctan.org/tex-archive/macros/latex/required/amslatex/math/
+\usepackage{amsmath}
+\usepackage{listings}
+
+\lstset{language=C} 
 
 
 
@@ -143,56 +116,65 @@
 % Each section begins with a \section{title} command
 \section{Introduction}
 	% \PARstart{}{} creates a tall first letter for this first paragraph
-	\PARstart{T}{hread} is a basic unit of CPU utilization, it consists of program counter, register set, and its own stack. Compared to processes, threads are much more lighweight since virtual memory space remains the same during a thread switch, which is not true for process switch. However, even threads sometimes pose overhead that will affect the performance of the program. Initializing and cleaning threads can pose a certain amount of overhead. For an parallel application that creates and destroys a large number of threads that each only runs for a short time, the thread management mechanism can create unnecessary resource waste. Thread pool can be useful in this type of scenario as it reduces the complexity of thread management and the overhead involved in thread creation and cleaning.
+	\PARstart{T}{hread} is a basic unit of CPU utilization, it consists of program counter, register set, and its own stack. Compared to processes, threads are much more lighweight since virtual memory space remains the same during a thread switch, which is not true for process switch. However, even threads sometimes pose overhead that will affect the performance of the program. Initializing and cleaning threads can pose a certain amount of overhead. For an parallel application that creates and destroys a large number of threads that each only runs for a short time, the thread management mechanism can create unnecessary resource waste. Thread pool can be useful in this type of scenario as it reduces the complexity of thread management and the overhead involved in thread creation and cleaning. The thread pool in implement in \textbf{GNU C}.
 
 % Main Part
 \section{Motivation}
-	We want to be able to implement a thread pool that is convinient to use. We aim to create a provide an interface that is easy for programmers to use. Thus we minimize the number of functions exposed to the programmers to maintain simplicity. We also want the performance of the thread pool to be reasonably more efficient than normal thread-based version. Thus we create several test cases to compare the performances in different implementations. We mainly focused on testing the performance difference in thread-based implementation and Goroutine-based version for certain types of jobs. Finally, we simply want to learn how to implement a thread pool and explore the drawbacks along with possible improvmetns.
+	We want to be able to implement a thread pool that is convinient to use. We aim to create a provide an interface that is easy for programmers to use. Thus we minimize the number of functions exposed to the programmers to maintain simplicity. We also want the performance of the thread pool to be reasonably more efficient than normal thread-based version. Thus we create several test cases to compare the performances in different implementations. We mainly focused on testing the performance difference in thread-based implementation and Goroutine-based version for certain types of jobs. Finally, we simply want to learn how to implement a thread pool and explore the drawbacks along with possible improvmetns.\\
 
-\section{Goals and Expectation}
-	The report can be written in \LaTeX{} or Microsoft Word, but \LaTeX{} is definitely preferred.
-	Its appearance should be as close to this document as possible to achieve consistency in the proceedings.
+	There are several goals we are aiming to achieve in the experiment. First, we want to run both long and short tasks in the threal pool to analyze which type of tests have the most impact on the performance on the program. We've created created various tests for the thread pool to perform and we will show the data collected later in the analysis section. We hope the low overhead of switch between tasks will help us outperform thread-based implementation as well go-based implementation. In addition, we implemented work stealing mechanism to improve the work throughput done by the thread pool. We hope the work stealing function will further improve the efficiency of the thread pool. 
+	
+\section{Programming Interface}
+The programming interface is designed for simplicity, there are three functions users are exposed to.\\
 
-	% You can cite a book or paper by using \cite{reference}.
-	% The references will be defined at the end of this .tex file in the bibliography
-	References should be cited as numbers, and should be ordered by their appearance (example: ``... as shown in \cite{HOP96}, ...'').
-	Only references that are actually cited can be listed in the references section.
-	The references' format should be evident from the examples in this text.
+\begin{itemize}
+	\item \begin{lstlisting}
+void thread_pool_init(int workers, 
+		      int mutex_flag);
+	\end{lstlisting}
+	This function initialize a new thread pool. The \textbf{workers} attribute specifies the number of threads that can exist in a thread pool. If $0$ is passd in, the number of threads will be initialized to the number of core in the execution environment. The \textbf{mutex\_flag} argument let user decides whether to use mutex or spinlock as synchronization method. Note if the thread pool is initialized more than once, every invocation of this function will be discarded.\\
+	\item 
+	\begin{lstlisting}
+bool thread_pool_add(task_func *func,
+		     void* aux,
+		     enum CallType);
+	\end{lstlisting}
+	This function adds tasks to the thread pool. The \textbf{func} attribute represents the function that is to be executed. The \textbf{aux} attribute indicates the parameter \textbf{func} takes in. the \textbf{CallType} specifies whether to use blocking or non-blocking mechanism for the thread pool. If a task is added without failure, $true$ is returned. Otherwise, $false$ will be returned.\\
+	\item \begin{lstlisting}
+void thread_pool_wait();
+	\end{lstlisting}
+	This function signifies all threads in thread pool that no more job will be added and the calling function waits for all tasks in the thread pool to finish.
+\end{itemize}
 
-	References should be of academic character and should be published and accessible.
-	Your advisor can answer your questions regarding literature research.
-	You must cite all used sources.
-	Examples of good references include text books and scientific journals or conference proceedings.
-	If possible, citing internet pages should be avoided. In particular, Wikipedia is \emph{not} an appropriate reference in academic reports.
-	Avoiding references in languages other than English is recommended.
+\section{Implementation}
+The low overhead of the thread pool is acheived with several design decisions. We will discuss the major implementations. A thread pool is first initialized by the main thread and the corresponding number of threads are initialized with their attributes. Each task is represented as a \textbf{struct task}. It is created by the calling function whenever the user sends the function to be executed to the thread pool. It is then distributed to the threads in the thread pool in a round-robin style to ensure even distribution. Each thread owns a privat task queue to store all its assigned tasks. Each queue is protected by either a mutex or a spinlock depending on users' specification. However, it is possible that a thread's task queue is empty when it is first initialized. It will waste CPU resource if such task is kept up and running without executing any tasks. Thus, we use semaphore to improve the efficiency of the thread pool. Thus we let the main thread invoking sema\_post on each thread once it finishes adding tasks to the thread's task queue to indicate the availability of tasks. However, the thread's task queue can be empty for other reasons. The most important one is that the thread finishes executing all assigned tasks. Thus, we implement work stealing algorithm to keep the idle thread busy by letting it trying to steal tasks from other threads by randomly choosing one. Since we don't want tasks stealing to create too much overhead as it tries to grab tasks from other threads, we simply let the idle thread using pthread\_mutex\_trylock() or pthread\_spin\_trylock(). If the stealing succeeds, the tasks is grabbed from the victim's task queue and executed. Otherwise, the steal will fail. If the steal fails too many times, that indicates many threads' task queue is already empty and the thread pool is getting close to running out of tasks. In this case, letting more threads trying to steal tasks will create unnecessary overhead, thus the thread will be blocked to prevent wasting resources. If eventually the threads run out of tasks, it will increase \textbf{wait\_sema} to let the main thread know it finishes its job. If all threads signify that they've finihsed their tasks, then thread pool is terminated.
 
-	% You can reference tables and figure by using the \ref{label} command. Each table and figure needs to have a UNIQUE label.
-	Figures and tables should be labeled and numbered, such as in Table~\ref{tab:simParameters} and Fig.~\ref{fig:tf_plot}.
+\section{Analysis}
 
 	% This is how you define a table: the [!hbt] means that LaTeX is forced (by the !) to place the table exactly here (by h), or if that doesnt work because of a pagebreak or so, it tries to place the table to the bottom of the page (by b) or the top (by t).
-	\begin{table}[!hbt]
+	%\begin{table}[!hbt]
 		% Center the table
-		\begin{center}
-		% Title of the table
-		\caption{Simulation Parameters}
-		\label{tab:simParameters}
+	%\begin{center}
+	%	\caption{Simulation Parameters}
+	%	\label{tab:simParameters}
 		% Table itself: here we have two columns which are centered and have lines to the left, right and in the middle: |c|c|
-		\begin{tabular}{|c|c|}
-			% To create a horizontal line, type \hline
-			\hline
-			% To end a column type &
-			% For a linebreak type \\
-			Information message length & $k=16000$ bit \\
-			\hline
-			Radio segment size & $b=160$ bit \\
-			\hline
-			Rate of component codes & $R_{cc}=1/3$\\
-			\hline
-			Polynomial of component encoders & $[1 , 33/37 , 25/37]_8$\\
-			\hline
-		\end{tabular}
-		\end{center}
-	\end{table}
+	%	\begin{tabular}{|c|c|}
+	%		% To create a horizontal line, type \hline
+	%		\hline
+	%		% To end a column type &
+	%		% For a linebreak type \\
+	%		Information message length & $k=16000$ bit \\
+	%		\hline
+	%		Radio segment size & $b=160$ bit \\
+	%		\hline
+	%		Rate of component codes & $R_{cc}=1/3$\\
+	%		\hline
+	%		Polynomial of component encoders & $[1 , 33/37 , 25/37]_8$\\
+	%		\hline
+	%	\end{tabular}
+	%	\end{center}
+	%\end{table}
+
 
 	% If you have questions about how to write mathematical formulas in LaTeX, please read a LaTeX book or the 'Not So Short Introduction to LaTeX': tobi.oetiker.ch/lshort/lshort.pdf
 
