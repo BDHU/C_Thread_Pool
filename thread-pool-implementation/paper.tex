@@ -150,6 +150,32 @@ void thread_pool_wait();
 The low overhead of the thread pool is acheived with several design decisions. We will discuss the major implementations. A thread pool is first initialized by the main thread and the corresponding number of threads are initialized with their attributes. Each task is represented as a \textbf{struct task}. It is created by the calling function whenever the user sends the function to be executed to the thread pool. It is then distributed to the threads in the thread pool in a round-robin style to ensure even distribution. Each thread owns a privat task queue to store all its assigned tasks. Each queue is protected by either a mutex or a spinlock depending on users' specification. However, it is possible that a thread's task queue is empty when it is first initialized. It will waste CPU resource if such task is kept up and running without executing any tasks. Thus, we use semaphore to improve the efficiency of the thread pool. Thus we let the main thread invoking sema\_post on each thread once it finishes adding tasks to the thread's task queue to indicate the availability of tasks. However, the thread's task queue can be empty for other reasons. The most important one is that the thread finishes executing all assigned tasks. Thus, we implement work stealing algorithm to keep the idle thread busy by letting it trying to steal tasks from other threads by randomly choosing one. Since we don't want tasks stealing to create too much overhead as it tries to grab tasks from other threads, we simply let the idle thread using pthread\_mutex\_trylock() or pthread\_spin\_trylock(). If the stealing succeeds, the tasks is grabbed from the victim's task queue and executed. Otherwise, the steal will fail. If the steal fails too many times, that indicates many threads' task queue is already empty and the thread pool is getting close to running out of tasks. In this case, letting more threads trying to steal tasks will create unnecessary overhead, thus the thread will be blocked to prevent wasting resources. If eventually the threads run out of tasks, it will increase \textbf{wait\_sema} to let the main thread know it finishes its job. If all threads signify that they've finihsed their tasks, then thread pool is terminated.
 
 \section{Analysis}
+Below is the hardware we used to conduct experiements on the performance of the thread pool.
+	\begin{table}[!hbt]
+		% Center the table
+	\begin{center}
+		\caption{Hardware Sepcification}
+		\label{tab:simParameters}
+		% Table itself: here we have two columns which are centered and have lines to the left, right and in the middle: |c|c|
+		\begin{tabular}{|c|c|}
+			% To create a horizontal line, type \hline
+			\hline
+			% To end a column type &
+			% For a linebreak type \\
+			Processor & Intel® Core™ i7-6700 CPU \\
+								&@3.40GHz $\times$ 8\\
+			\hline
+			RAM & $15.6$ GiB \\
+			\hline
+			OS & Ubuntu 16.04.4 LTS 64-bit\\
+			\hline
+		\end{tabular}
+		\end{center}
+	\end{table}
+
+We create same tasks for every implementation to execute to ensure fairness. we've tested(need some work here)...
+
+\section{Conclusion}
 
 	% This is how you define a table: the [!hbt] means that LaTeX is forced (by the !) to place the table exactly here (by h), or if that doesnt work because of a pagebreak or so, it tries to place the table to the bottom of the page (by b) or the top (by t).
 	%\begin{table}[!hbt]
@@ -190,9 +216,6 @@ The low overhead of the thread pool is acheived with several design decisions. W
 		\label{fig:tf_plot}
 		\end{center}
 	\end{figure}
-
-\section{Filling this page}
-	Gallia est omnis divisa in partes tres, quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur. Gallos ab Aquitanis Garumna flumen, a Belgis Matrona et Sequana dividit. Horum omnium fortissimi sunt Belgae, propterea quod a cultu atque humanitate provinciae longissime absunt, minimeque ad eos mercatores saepe commeant atque ea quae ad effeminandos animos pertinent important, proximique sunt Germanis, qui trans Rhenum incolunt, quibuscum continenter bellum gerunt. Qua de causa Helvetii quoque reliquos Gallos virtute praecedunt, quod fere cotidianis proeliis cum Germanis contendunt, cum aut suis finibus eos prohibent aut ipsi in eorum finibus bellum gerunt. Eorum una, pars, quam Gallos obtinere dictum est, initium capit a flumine Rhodano, continetur Garumna flumine, Oceano, finibus Belgarum, attingit etiam ab Sequanis et Helvetiis flumen Rhenum, vergit ad septentriones. Belgae ab extremis Galliae finibus oriuntur, pertinent ad inferiorem partem fluminis Rheni, spectant in septentrionem et orientem solem.
 
 \section{Conclusion}
 	This section summarizes the paper.
