@@ -1,46 +1,39 @@
 // test program
+#define _GNU_SOURCE
+
 #include<stdlib.h>
 #include<stdio.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/sysinfo.h>
+#include <pthread.h>
+#include "shared-test.c"
 
 int mutex_flag;
-const int prime = 4222234741;
-const char* data = "A purely peer-to-peer version of electronic cash would allow online\
-payments to be sent directly from one party to another without going through a\
-financial institution. Digital signatures provide part of the solution, but the main\
-benefits are lost if a trusted third party is still required to prevent double-spending.\
-We propose a solution to the double-spending problem using a peer-to-peer network.\
-The network timestamps transactions by hashing them into an ongoing chain of\
-hash-based proof-of-work, forming a record that cannot be changed without redoing\
-the proof-of-work. The longest chain not only serves as proof of the sequence of\
-events witnessed, but proof that it came from the largest pool of CPU power. As\
-long as a majority of CPU power is controlled by nodes that are not cooperating to\
-attack the network, they'll generate the longest chain and outpace attackers. The\
-network itself requires minimal structure. Messages are broadcast on a best effort\
-basis, and nodes can leave and rejoin the network at will, accepting the longest\
-proof-of-work chain as proof of what happened while they were gone. \n";
+typedef void* tfunc(void* aux);
+struct work {
+  tfunc* func; 
+  void* aux;
+};
 
 struct work_load {
   pthread_t tid;
-  int* start;
-  int size;
-  int lstart;
+  int start;
+  int end;
 };
 
-void short_task(void* arg);
-void long_task(void* arg);
+// preallocate this
+struct work jobs[1000];
 void* worker_func(void* arg);
 
 int main(int argc, char** argv) {
-  int o;
+  int c;
   int workers = 0;
-  int test_size = 1000;
+  int test_size = 1000;  
   char test_type[10];
 
   // worker can be predefined or set to default
-  struct option opts[3] = {
+  struct option opts[4] = {
     {"workers", required_argument, NULL, 'w'},
     {"mutex", no_argument, &mutex_flag, 1},
     {"test", required_argument, NULL, 't'},
@@ -48,8 +41,8 @@ int main(int argc, char** argv) {
   };
 
   // parse arguments
-  while ((o = getopt_long_only(argc, argv, "wt:", opts, NULL)) != -1 ) {
-    switch (o) {
+  while ((c = getopt_long_only(argc, argv, "wt:", opts, NULL)) != -1 ) {
+    switch (c) {
       case 0:
       	break;
       case 'w':
@@ -59,7 +52,7 @@ int main(int argc, char** argv) {
         strcpy(test_type, optarg);
         break;
       default:
-        printf("default case, don't recognize anything %d \n", o);
+        printf("default case, don't recognize anything %d \n", c);
     }
   }
 
@@ -67,10 +60,18 @@ int main(int argc, char** argv) {
   workers = workers == 0 ? get_nprocs() : workers;
   printf("Running with %d threads \n", workers);  
   
+  int lnum = 0;
+  int snum = 0;
+  struct out o[lnum_limit];
+  for (int i=0; i<lnum_limit; i++) {
+    o[i].dir = "pwoutput";
+    o[i].arg = i;
+  }
+
   struct work_load work[workers];
 
-  int results[test_size];
-  for (int i=0; i<test_size; i++) {
+  int results[snum_limit];
+  for (int i=0; i<snum_limit; i++) {
     results[i] = i;
   }
   // does not wake up till later
@@ -78,20 +79,52 @@ int main(int argc, char** argv) {
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
+
+  // populate works.
+  for (int i=0; i<test_size; i++) {
+    if (lnum >= lnum_limit) {
+      jobs[i].func = short_task;
+      jobs[i].aux = results+snum;  
+      snum++;  
+      continue;
+    }
+    if (snum >= snum_limit) {
+      jobs[i].func = long_task;
+      jobs[i].aux = o+lnum;
+      lnum++; 
+      continue;
+    }
+
+    int x = rand() % 100;
+    if (x<rate) {
+      jobs[i].func = short_task;
+      jobs[i].aux = results+snum;  
+      snum++;     
+    } else {
+      jobs[i].func = long_task;
+      jobs[i].aux = o+lnum;
+      lnum++; 
+    }
+  }
+
   int work_assigned = 0;
   int average_load = test_size / workers;
+
+  cpu_set_t cpuset[workers];
   for (int i=0; i<workers; i++) {
-    work[i].start = results + work_assigned;
-    work[i].size = average_load;
-    work[i].lstart = work_assigned;
-    if (i == workers - 1) {
-      work[i].size = test_size - work_assigned;
-    } 
+    CPU_ZERO(&cpuset[i]);    
+    work[i].start = work_assigned;
     work_assigned += average_load;
+    work[i].end = work_assigned;
+    if (i == workers - 1) {
+      work[i].end = test_size;
+    } 
 
     if (pthread_create(&work[i].tid, NULL, worker_func, work+i) != 0) {
       printf("failed to create thread %d \n", i);
     }
+    CPU_SET(i, &cpuset[i]);    
+    pthread_setaffinity_np(work[i].tid, sizeof(cpu_set_t), &cpuset[i]);
   }
 
   for (int i=0; i<workers; i++) {
@@ -112,38 +145,13 @@ int main(int argc, char** argv) {
 
 // ============== experiment ==================
 
-void long_task(void* arg) {
-  char buf[30];
-  snprintf(buf, 30, "pwoutput/tmp-%d", (int)arg);
-  
-  FILE *f = fopen(buf, "w+");
-  if (!f) {
-    printf("Failed to create file \n");
-    return;
-  }
-
-  size_t size = strlen(data)+1;
-  size_t wsize = fwrite(data, 1, size, f);
-  if (wsize != size)
-    printf("Failed to write %lu bytes, only wrote %lu \n", size, wsize);
-} 
-
-// compute sum and then hash it
-void short_task(void* arg) {
-  int sum = 0;
-  int* p = (int*) arg;
-  // compute sum 
-  for (int x=1; x<*p; x++) 
-    sum += x;
-
-  *p = (sum * (sum-2)) % prime;
-}
-
 void* worker_func(void* arg) {
   struct work_load* wl = (struct work_load*)arg;
-  for (int i=0; i<wl->size; i++) {
-    short_task(wl->start + i);
-    long_task(wl->lstart + i);
+
+  // printf("worker %lu: range[%d, %d] \n", wl->start, wl->end);
+  for (int i=wl->start; i<wl->end; i++) {
+    jobs[i].func(jobs[i].aux);
   }
+  
   return NULL;
 } 

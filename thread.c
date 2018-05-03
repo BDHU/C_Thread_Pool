@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -5,13 +7,11 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include "thread.h"
-
-#define CONT_TASK 1
+#include <pthread.h>
 
 /* will probably change to list when the thread number becomes dynamic */
 Thread* thread_info;
-Task* avail_tasks; // global queue for tasks
-Task* last_task;
+TempThread* temps; 
 int workers;
 int mutex_flag;
 int curr_worker;
@@ -35,18 +35,20 @@ bool all_done = false;
 void thread_pool_init(int w, int use_mutex) {
   static bool initialized = false;
   mutex_flag = use_mutex;
-  avail_tasks = NULL;
-  last_task = NULL;
   curr_worker = 0;
+  temps = NULL;
 
   /* avoid reinitialization of the thread pool */
   if (initialized) 
     return;
 
+    
   /* set workers to number of processors if not given a defined value */
-  //workers = w == 0 ? get_nprocs() : w;
-  workers = 8;
+  int proc = get_nprocs();
+  workers = w == 0 ? proc : w;
   printf("Initializing thread pool with %d threads, mutex %d \n", workers, use_mutex);  
+  
+  // cpu_set_t cpuset[workers];
   
   /* initialize threads info */
   thread_info = calloc(workers, sizeof(Thread)); 
@@ -85,7 +87,7 @@ void thread_pool_init(int w, int use_mutex) {
     if (pthread_create(&thread_info[i].tid, NULL, worker_func, &thread_info[i]) != 0) {
       printf("failed to create thread %d \n", i);
       i--;
-    }
+    }  
   }
   all_done = true;
   initialized = true;
@@ -105,9 +107,34 @@ void thread_pool_wait() {
      sem_wait(&thread_info[i].wait_sema);
      thread_info[i].count = 0;
   }
+
+  TempThread* cur = temps;
+  // wait for the blocking calls to finish
+  while (cur) {
+    if (pthread_join(cur->tid, NULL) != 0) {
+      printf("failed to wait thread \n");
+    }
+    cur = cur->next;
+    free(temps);
+    temps = cur;
+  }
 }
 
-bool thread_pool_add(task_func *func, void* aux) {
+bool thread_pool_add(task_func *func, void* aux, enum CallType type) {
+  if (type == Blocking) {
+    TempThread* t = malloc(sizeof *t);
+    if (t == NULL)
+      return false;
+    t->next = temps;
+    temps = t;
+    
+    if (pthread_create(&t->tid, NULL, func, aux) != 0) {
+      printf("failed to create blocking thread in thread pool add \n");
+      return false;
+    } 
+    return true;
+  }
+
   Task* t = task_init(func, aux);
   if (t == NULL) {
     return false;
@@ -167,7 +194,7 @@ void assign_task(Task* task) {
     printf("Failed to add task, error %d, will keep trying \n", errno);
 
   x++;
-//  if ((x%5) == 0)
+ if ((x%10) == 0)
    curr_worker = ((curr_worker+1) % workers);
 }
 
@@ -213,7 +240,7 @@ bool steal_work(Thread *t, unsigned int *seed) {
 void* worker_func(void* t) {
   int e;
   Thread* thread = (Thread*) t;
-  printf("thread %li\n", thread->tid);
+  //printf("thread %li\n", thread->tid);
   unsigned int seed;
   /* grabbing a task from the front of the queue
      assume task is present */
@@ -260,10 +287,11 @@ int times = 0;
       // wait for global signal send by the main thread
       //if (global_stop == 1) { // check if atomic varible here works
         sem_post(&thread->wait_sema); /* indicates finishing execution */
-        printf("finished\n\n");
+        //printf("finished\n\n");
         break;
       //}
     } else {
+//<<<<<<< HEAD
       task = thread->queue.start;
       thread->queue.num_tasks--;
       thread->queue.start = task->next;
@@ -278,6 +306,11 @@ int times = 0;
 
 
       // maybe try random stealing here
+/*=======
+    task = thread->queue.start;
+    thread->queue.num_tasks--;
+    thread->queue.start = task->next;
+>>>>>>> 05fe20000289860ff2caeeb697cd3cdcac5c2508 */
     }
     unlock(thread);
     

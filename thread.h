@@ -1,8 +1,7 @@
-#include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
 
-typedef void task_func (void *aux);
+typedef void* task_func (void *aux);
 
 typedef struct task {
   void*        aux;               /* pointer to arguments of the task */
@@ -29,18 +28,15 @@ typedef struct thread {
   int max;
 } Thread;
 
-typedef struct daemon {
-  // pointer to the thread pool
-  Thread *thread_pool;
-  
-} Daemon;
+typedef struct temp_thread {
+  pthread_t          tid;
+  struct temp_thread* next;  
+} TempThread;
+
+enum CallType{NonBlocking, Blocking};
 
 /* ======================== user API ======================== */
 
 void thread_pool_init(int workers, int mutex_flag);
-bool thread_pool_add(task_func *func, void* aux);
+bool thread_pool_add(task_func *func, void* aux, enum CallType);
 void thread_pool_wait();
-
-/* ======================== Thread pool daemon ======================== */
-// TODO ensure daemon is always up
-void daemon_init();
