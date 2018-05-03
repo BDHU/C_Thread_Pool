@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/sysinfo.h>
+#include <stdbool.h>
+#include <sys/types.h>
 #include "thread.h"
 
 #define CONT_TASK 1
@@ -18,11 +20,15 @@ int curr_worker;
 pthread_spinlock_t tasks_lock;     
 
 void* worker_func(void* t);
+bool trylock(Thread *t);
 void lock(Thread* t);
 void unlock(Thread* t);
 
 Task* task_init(task_func *func, void* aux);
 void assign_task(Task* task);
+
+
+bool all_done = false;
 
 /* ======================== Thread pool ======================== */
 
@@ -38,7 +44,8 @@ void thread_pool_init(int w, int use_mutex) {
     return;
 
   /* set workers to number of processors if not given a defined value */
-  workers = w == 0 ? get_nprocs() : w;
+  //workers = w == 0 ? get_nprocs() : w;
+  workers = 8;
   printf("Initializing thread pool with %d threads, mutex %d \n", workers, use_mutex);  
   
   /* initialize threads info */
@@ -61,7 +68,7 @@ void thread_pool_init(int w, int use_mutex) {
       continue;
     }
 
-    //sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
+    sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
     
     if ((e=pthread_mutex_init(&thread_info[i].mutex, NULL)) != 0) {
       printf("failed to initialize the mutex for thread %d, error code %d\n", i, e);
@@ -80,6 +87,7 @@ void thread_pool_init(int w, int use_mutex) {
       i--;
     }
   }
+  all_done = true;
   initialized = true;
 }
 
@@ -163,10 +171,50 @@ void assign_task(Task* task) {
    curr_worker = ((curr_worker+1) % workers);
 }
 
+bool steal_work(Thread *t, unsigned int *seed) {
+  /* randomly choose a thread to steal work form  */
+  //unsigned int seed;
+  int index = rand_r(seed);
+  index %= (workers);
+  Thread *victim = thread_info+index;
+  if (!all_done || victim == t) {
+    return false;
+  }
+  if (!trylock(victim)) {
+    return false;
+  }
+  if (victim->queue.num_tasks < 1 || victim->count < 1) {
+    unlock(victim);
+    return false;
+  }
+  /* remove the task from other  */
+  Task *task = NULL;
+  task = victim->queue.start;
+
+
+  (victim->queue.num_tasks) --;
+  if (victim->queue.num_tasks == 0) {
+    victim->queue.start = NULL;
+    victim->queue.end = NULL;
+  } else {
+    victim->queue.start = victim->queue.start->next; 
+    victim->queue.start->prev = NULL;
+  }
+  unlock(victim);
+  if (task) {
+    task->func(task->aux);
+    free(task);
+  }
+
+  return true;
+
+}
+
 void* worker_func(void* t) {
   int e;
   Thread* thread = (Thread*) t;
-
+  printf("thread %li\n", thread->tid);
+  unsigned int seed;
   /* grabbing a task from the front of the queue
      assume task is present */
   while(1) {
@@ -176,21 +224,50 @@ void* worker_func(void* t) {
     // ummm work stealing is gonna be weird lol
     // but whatever, it will be fine.
 
-    // wait for task first
-    if ((e=sem_wait(&thread->task_sema)) != 0) {
-      printf("Failed to wait for task, error %d, will keep trying \n", errno);
-      continue;
-    }
+    /* try to get a task */
+    //if ((e=sem_trywait(&thread->task_sema)) != 0) {
+    //  printf("Failed to wait for task, error %d, will keep trying \n", errno);
+    //  continue;
+    //}
+  
+
+    // if we failed to decrement the semaphore,
+    // that is, we failed to gain the resource to execuet
+    // the task
+    // if no tasks exists
+int times = 0;
+    if (sem_trywait(&thread->task_sema) != 0) {
+      int i = 0;
+      while (true) {
+      //for (; i < workers/ 2; i++) {
+      bool succeed = steal_work(thread, &seed);
+        if (succeed) {
+          // use try lock if possible
+        } else {
+         // break;
+         times ++;
+        }
+        if (times == workers)
+          break;
+      }
+      sem_wait(&thread->task_sema);
+    } 
 
     Task* task = NULL;
     lock(thread);
     if (thread->queue.num_tasks == 0 && thread->count > 0) 
     {
-       sem_post(&thread->wait_sema);  
+      // wait for global signal send by the main thread
+      //if (global_stop == 1) { // check if atomic varible here works
+        sem_post(&thread->wait_sema); /* indicates finishing execution */
+        printf("finished\n\n");
+        break;
+      //}
     } else {
-    task = thread->queue.start;
-    thread->queue.num_tasks--;
-    thread->queue.start = task->next;
+      task = thread->queue.start;
+      thread->queue.num_tasks--;
+      thread->queue.start = task->next;
+      task->prev = NULL;
   /*  if (thread->queue.num_tasks == 0) {
       thread->count++;
       thread->queue.end = NULL;
@@ -198,14 +275,33 @@ void* worker_func(void* t) {
       if (thread->queue.num_tasks > thread->max) 
       	thread->max = thread->queue.num_tasks;
     }*/
+
+
+      // maybe try random stealing here
     }
     unlock(thread);
     
     if (task) {
-    task->func(task->aux);
-    free(task);
+      task->func(task->aux);
+      free(task);
     }
   }
+}
+
+bool trylock(Thread *t) {
+  int e = -1;
+  if (mutex_flag) {
+    e = pthread_mutex_trylock(&t->mutex);
+    if (e == 0) {
+      return true;
+    }
+  } else {
+    e = pthread_spin_trylock(&t->lock);
+    if (e == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void lock(Thread* t) {

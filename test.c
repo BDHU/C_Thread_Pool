@@ -33,7 +33,7 @@ void test1(void* arg) {
 
 int main(int argc, char** argv) {
   int o;
-  int workers = 0;
+  int workers = 8;
   int test_size = 1000;
 
   char test_type[10] = ""; 
@@ -80,26 +80,29 @@ int main(int argc, char** argv) {
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
-  for (int i=0; i<test_size; i++) {
-    int x = rand() % 100;
-    if (x<75) {
-      if (snum < snum_limit) {
-        thread_pool_add(short_task, results+snum);  
-        snum++;        
-      }
-    } else {
-      if (lnum < lnum_limit) {
-        thread_pool_add(long_task, (void*) lnum);      
-        lnum++;        
-      }
-    }
-  }
+  //for (int i=0; i<test_size; i++) {
+    //int x = rand() % 100;
+    //if (x<75) {
+      //if (snum < snum_limit) {
+        //thread_pool_add(short_task, results+snum);  
+        //snum++;        
+      //}
+    //} else {
+      //if (lnum < lnum_limit) {
+        //thread_pool_add(long_task, (void*) lnum);      
+        //lnum++;        
+      //}
+    //}
+  //}
 
-  for (int i=snum; i<snum_limit; i++)
-    thread_pool_add(short_task, results+i); 
-  for (int i=lnum; i<lnum_limit; i++)
-    thread_pool_add(long_task, (void*) i);      
-
+  //for (int i=snum; i<snum_limit; i++)
+    //thread_pool_add(short_task, results+i); 
+  //for (int i=lnum; i<lnum_limit; i++)
+    //thread_pool_add(long_task, (void*) i);      
+for (int i = 0; i < 5000; i++) {
+  thread_pool_add(test_fib_serires, 4);
+  thread_pool_add(test_fib_serires, 6);
+}
   thread_pool_wait();
   gettimeofday(&t2, NULL);
   // compute and print the elapsed time in millisec
