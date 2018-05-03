@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -25,50 +26,79 @@ proof-of-work chain as proof of what happened while they were gone. \n`
 
 func main() {
 	test_size := 1000
-	result := make([]int, test_size)
-	for i := 0; i < test_size; i++ {
+
+	rate := 80
+	lnum_limit := test_size - rate*10
+	snum_limit := rate * 10
+	lnum := 0
+	snum := 0
+
+	result := make([]int, snum_limit)
+	for i := 0; i < snum_limit; i++ {
 		result[i] = i
 	}
+
+	// r := rand.Rand{}
+	rand.Seed(0)
 
 	wg := sync.WaitGroup{}
 	start := time.Now()
 	for i := 0; i < test_size; i++ {
 		wg.Add(1)
+		if lnum >= lnum_limit {
+			go short_task(&wg, &result[snum])
+			snum++
+			continue
+		}
+		if snum >= snum_limit {
+			go long_task(&wg, lnum)
+			lnum++
+			continue
+		}
 
-		go func(num *int) {
-			defer wg.Done()
-			sum := 0
-			// compute sum
-			for x := 1; x < *num; x++ {
-				sum += x
-			}
-			*num = (sum * (sum - 2)) % prime
-		}(&result[i])
-
-		wg.Add(1)
-		go func(arg int) {
-			defer wg.Done()
-
-			f, err := os.Create(fmt.Sprintf("goutput/tmp-%d", arg))
-			if err != nil {
-				fmt.Println("Failed to create")
-				return
-			}
-
-			wsize, err := f.WriteString(data)
-			if err != nil {
-				fmt.Println("Failed to write string")
-				return
-			}
-			if wsize < len(data) {
-				fmt.Printf("Failed to write all data expected %v, written %v \n", len(data), wsize)
-			}
-		}(i)
-
+		x := rand.Int() % 100
+		if x < rate || lnum >= lnum_limit {
+			go short_task(&wg, &result[snum])
+			snum++
+		} else {
+			go long_task(&wg, lnum)
+			lnum++
+		}
 	}
+
+	fmt.Printf("lnum %v, snum %v \n", lnum, snum)
 	wg.Wait()
 	t := time.Now()
 	elapsed := t.Sub(start)
 	ms := elapsed.Nanoseconds() / 1000000.0
 	fmt.Printf("Go execution finished, time is %v ms : %v ns \n", ms, elapsed.Nanoseconds())
+}
+
+func short_task(wg *sync.WaitGroup, num *int) {
+	defer wg.Done()
+	sum := 0
+	// compute sum
+	for x := 1; x < *num; x++ {
+		sum += x
+	}
+	*num = (sum * (sum - 2)) % prime
+}
+
+func long_task(wg *sync.WaitGroup, arg int) {
+	defer wg.Done()
+
+	f, err := os.Create(fmt.Sprintf("goutput/tmp-%d", arg))
+	if err != nil {
+		fmt.Println("Failed to create")
+		return
+	}
+
+	wsize, err := f.WriteString(data)
+	if err != nil {
+		fmt.Println("Failed to write string")
+		return
+	}
+	if wsize < len(data) {
+		fmt.Printf("Failed to write all data expected %v, written %v \n", len(data), wsize)
+	}
 }

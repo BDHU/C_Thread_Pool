@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
   }
 
   thread_pool_init(workers, mutex_flag);
-  int results[test_size];
-  for (int i=0; i<test_size; i++) {
+  int results[snum_limit];
+  for (int i=0; i<snum_limit; i++) {
     results[i] = i;
   }
 

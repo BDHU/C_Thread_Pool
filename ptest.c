@@ -7,14 +7,6 @@
 #include "shared-test.c"
 
 int mutex_flag;
-// void* worker_func(void* arg);
-
-// struct work_load {
-//   pthread_t tid;
-//   int* start;
-//   int size;
-//   int lstart;
-// };
 
 int main(int argc, char** argv) {  
   int test_size = 1000;
@@ -23,9 +15,7 @@ int main(int argc, char** argv) {
 
   int lnum = 0;
   int snum = 0;
-
-  // worker version
-  // struct work_load work[test_size];
+  
   pthread_t tids1[snum_limit];
   pthread_t tids2[lnum_limit];
   int results[snum_limit];

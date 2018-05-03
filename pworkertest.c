@@ -8,25 +8,26 @@
 #include "shared-test.c"
 
 int mutex_flag;
-
-// struct work {
-
-// }
+typedef void* tfunc(void* aux);
+struct work {
+  tfunc* func; 
+  void* aux;
+};
 
 struct work_load {
   pthread_t tid;
-  // struct work w;
-  int* start;
-  int size;
-  int lstart;
+  int start;
+  int end;
 };
 
+// preallocate this
+struct work jobs[1000];
 void* worker_func(void* arg);
 
 int main(int argc, char** argv) {
-  int o;
+  int c;
   int workers = 0;
-  int test_size = 50;  
+  int test_size = 1000;  
   char test_type[10];
 
   // worker can be predefined or set to default
@@ -38,8 +39,8 @@ int main(int argc, char** argv) {
   };
 
   // parse arguments
-  while ((o = getopt_long_only(argc, argv, "wt:", opts, NULL)) != -1 ) {
-    switch (o) {
+  while ((c = getopt_long_only(argc, argv, "wt:", opts, NULL)) != -1 ) {
+    switch (c) {
       case 0:
       	break;
       case 'w':
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
         strcpy(test_type, optarg);
         break;
       default:
-        printf("default case, don't recognize anything %d \n", o);
+        printf("default case, don't recognize anything %d \n", c);
     }
   }
 
@@ -57,10 +58,18 @@ int main(int argc, char** argv) {
   workers = workers == 0 ? get_nprocs() : workers;
   printf("Running with %d threads \n", workers);  
   
+  int lnum = 0;
+  int snum = 0;
+  struct out o[lnum_limit];
+  for (int i=0; i<lnum_limit; i++) {
+    o[i].dir = "pwoutput";
+    o[i].arg = i;
+  }
+
   struct work_load work[workers];
 
-  int results[test_size];
-  for (int i=0; i<test_size; i++) {
+  int results[snum_limit];
+  for (int i=0; i<snum_limit; i++) {
     results[i] = i;
   }
   // does not wake up till later
@@ -68,16 +77,43 @@ int main(int argc, char** argv) {
   double elapsedTime;
   // start timer
   gettimeofday(&t1, NULL);  
+
+  // populate works.
+  for (int i=0; i<test_size; i++) {
+    if (lnum >= lnum_limit) {
+      jobs[i].func = short_task;
+      jobs[i].aux = results+snum;  
+      snum++;  
+      continue;
+    }
+    if (snum >= snum_limit) {
+      jobs[i].func = long_task;
+      jobs[i].aux = o+lnum;
+      lnum++; 
+      continue;
+    }
+
+    int x = rand() % 100;
+    if (x<rate) {
+      jobs[i].func = short_task;
+      jobs[i].aux = results+snum;  
+      snum++;     
+    } else {
+      jobs[i].func = long_task;
+      jobs[i].aux = o+lnum;
+      lnum++; 
+    }
+  }
+
   int work_assigned = 0;
   int average_load = test_size / workers;
   for (int i=0; i<workers; i++) {
-    work[i].start = results + work_assigned;
-    work[i].size = average_load;
-    work[i].lstart = work_assigned;
-    if (i == workers - 1) {
-      work[i].size = test_size - work_assigned;
-    } 
+    work[i].start = work_assigned;
     work_assigned += average_load;
+    work[i].end = work_assigned;
+    if (i == workers - 1) {
+      work[i].end = test_size;
+    } 
 
     if (pthread_create(&work[i].tid, NULL, worker_func, work+i) != 0) {
       printf("failed to create thread %d \n", i);
@@ -104,13 +140,11 @@ int main(int argc, char** argv) {
 
 void* worker_func(void* arg) {
   struct work_load* wl = (struct work_load*)arg;
-  struct out o[wl->size];
-  for (int i=0; i<wl->size; i++) {
-    o[i].dir = "pwoutput";
-    o[i].arg = wl->lstart + i;
-    
-    short_task(wl->start + i);
-    long_task(o+i);
+
+  // printf("worker %lu: range[%d, %d] \n", wl->start, wl->end);
+  for (int i=wl->start; i<wl->end; i++) {
+    jobs[i].func(jobs[i].aux);
   }
+  
   return NULL;
 } 
