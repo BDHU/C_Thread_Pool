@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include <getopt.h>
 #include <sys/time.h>
+#include <pthread.h>
 #include "shared-test.c"
 
 int mutex_flag;
@@ -78,21 +79,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  // for (int i=snum; i<snum_limit; i++) {
-  //   if (pthread_create(&tids1[i], NULL, short_task, results+i) != 0) {
-  //     printf("failed to create thread %d \n", i);
-  //     exit(1);
-  //   }
-  // }
-
-  // for (int i=lnum; i<lnum_limit; i++) {
-  //   if (pthread_create(&tids2[i], NULL, long_task, o+i) != 0) {
-  //     printf("failed to create thread %d \n", i);
-  //     exit(1);
-  //   }
-  // }
-  
-  printf("current snum %d, lnum %d \n", snum, lnum);
   for (int i=0; i<snum_limit; i++) {
     if (pthread_join(tids1[i], NULL) != 0) {
       printf("failed to wait thread %d \n", i);

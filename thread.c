@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <sys/sysinfo.h>
 #include "thread.h"
+#include <pthread.h>
 
 #define CONT_TASK 1
 
 /* will probably change to list when the thread number becomes dynamic */
 Thread* thread_info;
-Task* avail_tasks; // global queue for tasks
-Task* last_task;
+TempThread* temps; 
 int workers;
 int mutex_flag;
 int curr_worker;
@@ -29,9 +29,8 @@ void assign_task(Task* task);
 void thread_pool_init(int w, int use_mutex) {
   static bool initialized = false;
   mutex_flag = use_mutex;
-  avail_tasks = NULL;
-  last_task = NULL;
   curr_worker = 0;
+  temps = NULL;
 
   /* avoid reinitialization of the thread pool */
   if (initialized) 
@@ -61,7 +60,7 @@ void thread_pool_init(int w, int use_mutex) {
       continue;
     }
 
-    //sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
+    sem_init(&thread_info[i].wait_sema, PTHREAD_PROCESS_PRIVATE, 0);
     
     if ((e=pthread_mutex_init(&thread_info[i].mutex, NULL)) != 0) {
       printf("failed to initialize the mutex for thread %d, error code %d\n", i, e);
@@ -97,9 +96,34 @@ void thread_pool_wait() {
      sem_wait(&thread_info[i].wait_sema);
      thread_info[i].count = 0;
   }
+
+  TempThread* cur = temps;
+  // wait for the blocking calls to finish
+  while (cur) {
+    if (pthread_join(cur->tid, NULL) != 0) {
+      printf("failed to wait thread \n");
+    }
+    cur = cur->next;
+    free(temps);
+    temps = cur;
+  }
 }
 
-bool thread_pool_add(task_func *func, void* aux) {
+bool thread_pool_add(task_func *func, void* aux, enum CallType type) {
+  if (type == Blocking) {
+    TempThread* t = malloc(sizeof *t);
+    if (t == NULL)
+      return false;
+    t->next = temps;
+    temps = t;
+    
+    if (pthread_create(&t->tid, NULL, func, aux) != 0) {
+      printf("failed to create blocking thread in thread pool add \n");
+      return false;
+    } 
+    return true;
+  }
+
   Task* t = task_init(func, aux);
   if (t == NULL) {
     return false;
@@ -134,7 +158,7 @@ Task* task_init(task_func *func, void* aux) {
 // task add will only be executed by one thread
 // should be used as an internal function 
 void assign_task(Task* task) {
-  static int x =0;
+  // static int x =0;
   int e;
   if (task == NULL) {
     printf("Warning: you have either a NULL task \n");
@@ -158,8 +182,8 @@ void assign_task(Task* task) {
   if ((e=sem_post(&t->task_sema)) != 0) 
     printf("Failed to add task, error %d, will keep trying \n", errno);
 
-  x++;
-//  if ((x%5) == 0)
+//   x++;
+//  if ((x%10) == 0)
    curr_worker = ((curr_worker+1) % workers);
 }
 

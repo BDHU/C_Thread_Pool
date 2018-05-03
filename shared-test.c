@@ -3,10 +3,11 @@
 void* short_task(void* arg);
 void* long_task(void* arg);
 void* empty_task(void* arg);
+void test1(void* arg);
 
-int rate = 100;
-int lnum_limit = 0;
-int snum_limit = 1000;
+int rate = 80;
+int lnum_limit = 200;
+int snum_limit = 800;
 
 const int prime = 4222234741;
 const char* data = "A purely peer-to-peer version of electronic cash would allow online\
@@ -45,7 +46,7 @@ void* long_task(void* arg) {
   if (wsize != size)
     printf("Failed to write %lu bytes, only wrote %lu \n", size, wsize);
   return NULL;
-} 
+}
 
 // compute sum and then hash it
 void* short_task(void* arg) {
@@ -61,4 +62,8 @@ void* short_task(void* arg) {
 
 void* empty_task(void* arg) {
   return NULL;
+}
+
+void test1(void* arg) {
+  for(int i=0; i<1000000; i++);
 }

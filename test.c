@@ -9,9 +9,6 @@
 int mutex_flag;
 
 void test_fib_serires(void *num_ptr);
-void test1(void* arg) {
-  for(int i=0; i<10000; i++);
-}
 
 int main(int argc, char** argv) {
   int c;
@@ -67,32 +64,25 @@ int main(int argc, char** argv) {
   gettimeofday(&t1, NULL);  
   for (int i=0; i<test_size; i++) {
     if (lnum >= lnum_limit) {
-      thread_pool_add(short_task, results+snum);  
+      thread_pool_add(short_task, results+snum, NonBlocking);  
       snum++;  
       continue;
     }
     if (snum >= snum_limit) {
-      thread_pool_add(long_task, o+lnum);      
+      thread_pool_add(long_task, o+lnum, Blocking);      
       lnum++; 
       continue;
     }
 
     int x = rand() % 100;
     if (x<rate) {
-      thread_pool_add(short_task, results+snum);  
+      thread_pool_add(short_task, results+snum, NonBlocking);  
       snum++;        
     } else {
-      thread_pool_add(long_task, o+lnum);      
+      thread_pool_add(long_task, o+lnum, Blocking);      
       lnum++; 
     }
   }
-
-  printf("current snum %d, lnum %d \n", snum, lnum);  
-  // for (int i=snum; i<snum_limit; i++)
-  //   thread_pool_add(short_task, results+i); 
-  // for (int i=lnum; i<lnum_limit; i++) 
-  //   thread_pool_add(long_task, o+i);
-
   thread_pool_wait();
   gettimeofday(&t2, NULL);
   // compute and print the elapsed time in millisec
@@ -119,21 +109,6 @@ void test_fib_serires(void * n) {
   }
 }
 
-/* ========================= */
-void* spawn_child_threads_helper_func(void *aux) {
-  printf("Thread id: %lu\n", pthread_self());
-  return NULL;
-}
-
-void test_spawn_child_threads(void *aux) {
-  int i = 0;
-  pthread_t threads[10];
-  for (; i<10; i++) {
-    pthread_create(&threads[i], NULL, spawn_child_threads_helper_func, NULL);
-  }
-}
-/* ========================= */
-
 void test_recursion(void *a) {
   int *aux = (int *)a;
   int num = *aux;
@@ -141,18 +116,6 @@ void test_recursion(void *a) {
     return;
   (*aux) = (*aux) - 1;
   test_recursion(aux);
-}
-
-void test_mutex(void *m) {
-  pthread_mutex_lock(m);
-  printf("print in mutex\n");
-  pthread_mutex_unlock(m);
-}
-
-void test_spinlock(void *spin) {
-  pthread_spin_lock(spin);
-  printf("print in spinlock\n");
-  pthread_spin_unlock((pthread_spinlock_t *)spin);
 }
 
 void test_async_print(void *num) {

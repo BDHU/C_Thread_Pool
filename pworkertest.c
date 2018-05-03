@@ -4,12 +4,18 @@
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/sysinfo.h>
+#include <pthread.h>
 #include "shared-test.c"
 
 int mutex_flag;
 
+// struct work {
+
+// }
+
 struct work_load {
   pthread_t tid;
+  // struct work w;
   int* start;
   int size;
   int lstart;
@@ -20,7 +26,7 @@ void* worker_func(void* arg);
 int main(int argc, char** argv) {
   int o;
   int workers = 0;
-  int test_size = 1000;  
+  int test_size = 50;  
   char test_type[10];
 
   // worker can be predefined or set to default
