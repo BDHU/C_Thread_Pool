@@ -4,22 +4,22 @@
 typedef void* task_func (void *aux);
 
 typedef struct task {
-  void*        aux;               /* pointer to arguments of the task */
-  task_func*   func;              /* pointer to the function this task will execute */
-  struct task* prev;
-  struct task* next;
+  void*              aux;               /* pointer to arguments of the task */
+  task_func*         func;              /* pointer to the function this task will execute */
+  struct task*       prev;
+  struct task*       next;
 } Task;
 
-// used to hold a segment of tasks
+/* used to hold a segment of tasks */
 typedef struct task_queue {
-  int num_tasks;   
-  Task* start;
-  Task* end;
+  int                num_tasks;   
+  Task*              start;
+  Task*              end;
 } Task_Queue; 
 
 typedef struct thread {
   pthread_t          tid;
-  pthread_spinlock_t lock;        /* guard access to task_queue */
+  pthread_spinlock_t lock;             /* guard access to task_queue */
   pthread_mutex_t    mutex;
   sem_t              task_sema;        /* use to notify task is there */
   sem_t              wait_sema;        /* use to notify task is there */
@@ -29,7 +29,7 @@ typedef struct thread {
 } Thread;
 
 typedef struct temp_thread {
-  pthread_t          tid;
+  pthread_t           tid;
   struct temp_thread* next;  
 } TempThread;
 

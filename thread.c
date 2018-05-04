@@ -102,7 +102,6 @@ void thread_pool_wait() {
   // waiting is not proper
   for (int i=0; i<workers; i++) {
      thread_info[i].count = 1;
-     // why is taks sema needed here
      sem_post(&thread_info[i].task_sema);
      sem_wait(&thread_info[i].wait_sema);
      thread_info[i].count = 0;
@@ -166,8 +165,8 @@ Task* task_init(task_func *func, void* aux) {
   return new_task;
 }
 
-// task add will only be executed by one thread
-// should be used as an internal function 
+/* task add will only be executed by one thread
+   should be used as an internal function */
 void assign_task(Task* task) {
   static int x =0;
   int e;
@@ -179,7 +178,7 @@ void assign_task(Task* task) {
   Thread* t = &thread_info[curr_worker];
   lock(t);
   if (t->queue.num_tasks == 0) {
-    // if queue is empty
+    /* if queue is empty */
     t->queue.start = t->queue.end = task;
   } else {
     Task *tmp = t->queue.end;
@@ -194,13 +193,12 @@ void assign_task(Task* task) {
     printf("Failed to add task, error %d, will keep trying \n", errno);
 
   x++;
- if ((x%10) == 0)
-   curr_worker = ((curr_worker+1) % workers);
+  if ((x%10) == 0)
+    curr_worker = ((curr_worker+1) % workers);
 }
 
 bool steal_work(Thread *t, unsigned int *seed) {
   /* randomly choose a thread to steal work form  */
-  //unsigned int seed;
   int index = rand_r(seed);
   index %= (workers);
   Thread *victim = thread_info+index;
@@ -250,23 +248,19 @@ void* worker_func(void* t) {
       int i = 0;
       while (true) {
       bool succeed = steal_work(thread, &seed);
-        if (succeed) {
-          // use try lock if possible
-        } else {
-         // break;
-         times ++;
-        }
+        if (!succeed)
+          times ++;
+
         if (times == workers)
           break;
       }
       sem_wait(&thread->task_sema);
     } 
 
-    // execute tasks on its own private queue
+    /* execute tasks on its own private queue */
     Task* task = NULL;
     lock(thread);
-    if (thread->queue.num_tasks == 0 && thread->count > 0) 
-    {
+    if (thread->queue.num_tasks == 0 && thread->count > 0) {
         sem_post(&thread->wait_sema); /* indicates finishing execution */
     } else {
       task = thread->queue.start;
@@ -287,14 +281,12 @@ bool trylock(Thread *t) {
   int e = -1;
   if (mutex_flag) {
     e = pthread_mutex_trylock(&t->mutex);
-    if (e == 0) {
+    if (e == 0)
       return true;
-    }
   } else {
     e = pthread_spin_trylock(&t->lock);
-    if (e == 0) {
+    if (e == 0)
       return true;
-    }
   }
   return false;
 }
