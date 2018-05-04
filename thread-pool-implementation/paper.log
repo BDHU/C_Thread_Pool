@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  3 MAY 2018 21:39
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  3 MAY 2018 21:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -123,22 +123,13 @@ Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
 \Gin@req@height=\dimen117
 \Gin@req@width=\dimen118
 )
-(/usr/local/texlive/2017/texmf-dist/tex/latex/xcolor/xcolor.sty
-Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2016/07/10 v1.1e Standard LaTeX Color (DPC)
 
 (/usr/local/texlive/2017/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
-Package xcolor Info: Driver file: pdftex.def on input line 225.
-Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
-Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
-Package xcolor Info: Model `RGB' extended on input line 1364.
-Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
-Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
-Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
-Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
-Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
-Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
+Package color Info: Driver file: pdftex.def on input line 147.
 )
 (/usr/local/texlive/2017/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip10
@@ -362,37 +353,49 @@ Missing character: There is no â in font ptmr7t!
 Missing character: There is no „ in font ptmr7t!
 Missing character: There is no ¢ in font ptmr7t!
 
-Underfull \hbox (badness 10000) in paragraph at lines 194--195
+Underfull \hbox (badness 10000) in paragraph at lines 195--196
 
  []
 
 [2] <test_1.png, id=20, 638.385pt x 325.215pt>
 File: test_1.png Graphic file (type png)
  <use test_1.png>
-Package pdftex.def Info: test_1.png used on input line 200.
+Package pdftex.def Info: test_1.png used on input line 203.
 (pdftex.def)             Requested size: 252.0pt x 128.37663pt.
 
 <test_2.png, id=22, 1219.55624pt x 627.34375pt>
 File: test_2.png Graphic file (type png)
  <use test_2.png>
-Package pdftex.def Info: test_2.png used on input line 213.
+Package pdftex.def Info: test_2.png used on input line 216.
 (pdftex.def)             Requested size: 252.0pt x 129.62097pt.
 
 <test_3.png, id=23, 1100.11pt x 681.54625pt>
 File: test_3.png Graphic file (type png)
  <use test_3.png>
-Package pdftex.def Info: test_3.png used on input line 225.
+Package pdftex.def Info: test_3.png used on input line 228.
 (pdftex.def)             Requested size: 252.0pt x 156.11797pt.
- [3 <./test_1.png> <./test_2.png> <./test_3.png>] (./paper.aux)
+
+Underfull \hbox (badness 2762) in paragraph at lines 237--238
+\OT1/ptm/m/n/10 deal-ing with a large num-ber of rel-a-tively short tasks
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 237--238
+
+ []
+
+[3 <./test_1.png> <./test_2.png> <./test_3.png>] [4
+
+] (./paper.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 4681 strings out of 492995
- 68014 string characters out of 6132704
- 165274 words of memory out of 5000000
- 8179 multiletter control sequences out of 15000+600000
+ 4259 strings out of 492995
+ 63441 string characters out of 6132704
+ 156955 words of memory out of 5000000
+ 7759 multiletter control sequences out of 15000+600000
  41788 words of font info for 79 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  39i,10n,49p,1749b,1191s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -408,10 +411,10 @@ exmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2017/texmf-dist/
 fonts/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2017/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on paper.pdf (3 pages, 205325 bytes).
+Output written on paper.pdf (4 pages, 207223 bytes).
 PDF statistics:
- 66 PDF objects out of 1000 (max. 8388607)
- 43 compressed objects within 1 object stream
+ 69 PDF objects out of 1000 (max. 8388607)
+ 45 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
