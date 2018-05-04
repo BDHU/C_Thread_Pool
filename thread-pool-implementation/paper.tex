@@ -173,7 +173,7 @@ Below is the hardware we used to conduct experiements on the performance of the 
 		\end{center}
 	\end{table}
 
-We create same tasks for every implementation to execute to ensure fairness. we've selected three types of tests that represent three typical scenarios in most applications. We designed a task that accesses file system and performs read and write operations. Since accessing file system usually requires blocking which generates large overhead, this task is perfect to represent tasks that takes more than a few CPU cycles to finish. We also designed a task that task an argument, and then computer then sum based on the input and generates a simple hash value. This represents a short to medium tasks present in most applications and we selected it as a candidate to represent short tasks. We also include a task that does nothing in order to test sheer performance of the thread pool without the influence of any outside factors. In addition, we mixed the number of long and shorts tasks in each benchmark in order to generalize the real life scenario where a mixture of different tasks are executed. We want to show that the speedup is not or at least minimally affected by the type of tasks executed.\\
+We create same tasks for every implementation to execute to ensure fairness. we've selected three types of tests that represent three typical scenarios in most applications. We designed a task that accesses file system and performs read and write operations. Since accessing file system usually requires blocking which generates large overhead, this task is perfect to represent tasks that takes more than a few CPU cycles to finish. We also designed a task that task an argument, and then computer then sum based on the input and generates a simple hash value. This represents a short to medium tasks present in most applications and we selected it as a candidate to represent short tasks. We also include a task that does nothing in order to test sheer performance of the thread pool without the influence of any outside factors. In addition, we mixed the number of long and shorts tasks in each benchmark in order to generalize the real life scenario where a mixture of different tasks are executed. We want to show that the speedup is not or at least minimally affected by the type of tasks executed. Then, we test the scalability of the thread pool itself by gradually increase the number of threads in the thread pool running $10,000$ tasks. The result matches with our expectation as the scalability is achieved when increasing the number of threads in the thread pool.\\
 
 \begin{figure}[!hbt]
 		% Center the figure.
@@ -182,6 +182,31 @@ We create same tasks for every implementation to execute to ensure fairness. we'
 		\includegraphics[width=\columnwidth]{test_1.png}
 		% Create a subtitle for the figure.
 		\caption{Benchmark speedup using long blocking tasks and short tasks. From left to right each section represents: long 25\% with short 75\%, long 50\% with short 50\%, and long 75\% with short 25\%. Green bar: pthread per task. Blue: Thread pool. Yellow: pthread per core. Dark Green: Goroutines}
+		% Define the label of the figure. It's good to use 'fig:title', so you know that the label belongs to a figure.
+		\label{fig:tf_plot}
+		\end{center}
+	\end{figure}
+	
+	
+\begin{figure}[!hbt]
+		% Center the figure.
+		\begin{center}
+		% Include the eps file, scale it such that it's width equals the column width. You can also put width=8cm for example...
+		\includegraphics[width=\columnwidth]{test_2.png}
+		% Create a subtitle for the figure.
+		\caption{Benchmark speedup using short blocking tasks and empty tasks. From left to right each section represents: long 25\% with short 75\%, long 50\% with short 50\%, and long 75\% with short 25\%. Green bar: pthread per task. Blue: Thread pool. Yellow: pthread per core. Dark Green: Goroutines}
+		% Define the label of the figure. It's good to use 'fig:title', so you know that the label belongs to a figure.
+		\label{fig:tf_plot}
+		\end{center}
+	\end{figure}
+	
+\begin{figure}[!hbt]
+		% Center the figure.
+		\begin{center}
+		% Include the eps file, scale it such that it's width equals the column width. You can also put width=8cm for example...
+		\includegraphics[width=\columnwidth]{test_3.png}
+		% Create a subtitle for the figure.
+		\caption{Benchmark scalability of thread pool with $10,000$ tasks running. Threads used from left to right: $1$, $2$, $4$, $8$, $16$.}
 		% Define the label of the figure. It's good to use 'fig:title', so you know that the label belongs to a figure.
 		\label{fig:tf_plot}
 		\end{center}
@@ -206,34 +231,6 @@ We create same tasks for every implementation to execute to ensure fairness. we'
 		\end{center}
 	\end{figure}
 
-\section{Conclusion}
-	This section summarizes the paper.
-
-% Now we need a bibliography:
-\begin{thebibliography}{5}
-
-	%Each item starts with a \bibitem{reference} command and the details thereafter.
-	\bibitem{HOP96} % Transaction paper
-	J.~Hagenauer, E.~Offer, and L.~Papke. Iterative decoding of binary block
-	and convolutional codes. {\em IEEE Trans. Inform. Theory},
-	vol.~42, no.~2, pp.~429–-445, Mar. 1996.
-
-	\bibitem{MJH06} % Conference paper
-	T.~Mayer, H.~Jenkac, and J.~Hagenauer. Turbo base-station cooperation for intercell interference cancellation. {\em IEEE Int. Conf. Commun. (ICC)}, Istanbul, Turkey, pp.~356--361, June 2006.
-
-	\bibitem{Proakis} % Book
-	J.~G.~Proakis. {\em Digital Communications}. McGraw-Hill Book Co.,
-	New York, USA, 3rd edition, 1995.
-
-	\bibitem{talk} % Web document
-	F.~R.~Kschischang. Giving a talk: Guidelines for the Preparation and Presentation of Technical Seminars.
-	\url{http://www.comm.toronto.edu/frank/guide/guide.pdf}.
-
-	\bibitem{5}
-	IEEE Transactions \LaTeX and Microsoft Word Style Files.
-	\url{http://www.ieee.org/web/publications/authors/transjnl/index.html}
-
-\end{thebibliography}
 
 % Your document ends here!
 \end{document}
