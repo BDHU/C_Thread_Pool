@@ -27,7 +27,7 @@ proof-of-work chain as proof of what happened while they were gone. \n`
 func main() {
 	test_size := 1000
 
-	rate := 75
+	rate := 25
 	lnum_limit := test_size - rate*10
 	snum_limit := rate * 10
 	lnum := 0
@@ -86,18 +86,18 @@ func short_task(wg *sync.WaitGroup, num *int) {
 
 func long_task(wg *sync.WaitGroup, arg int) {
 	defer wg.Done()
-	// f, err := os.Create(fmt.Sprintf("goutput/tmp-%d", arg))
-	// if err != nil {
-	// 	fmt.Println("Failed to create")
-	// 	return
-	// }
+	f, err := os.Create(fmt.Sprintf("goutput/tmp-%d", arg))
+	if err != nil {
+		fmt.Println("Failed to create")
+		return
+	}
 
-	// wsize, err := f.WriteString(data)
-	// if err != nil {
-	// 	fmt.Println("Failed to write string")
-	// 	return
-	// }
-	// if wsize < len(data) {
-	// 	fmt.Printf("Failed to write all data expected %v, written %v \n", len(data), wsize)
-	// }
+	wsize, err := f.WriteString(data)
+	if err != nil {
+		fmt.Println("Failed to write string")
+		return
+	}
+	if wsize < len(data) {
+		fmt.Printf("Failed to write all data expected %v, written %v \n", len(data), wsize)
+	}
 }
