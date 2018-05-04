@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.8.29)  3 MAY 2018 22:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.8.29)  3 MAY 2018 22:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -363,30 +363,28 @@ Missing character: There is no â in font ptmr7t!
 Missing character: There is no „ in font ptmr7t!
 Missing character: There is no ¢ in font ptmr7t!
  [2]
-Underfull \hbox (badness 10000) in paragraph at lines 196--197
+Underfull \hbox (badness 10000) in paragraph at lines 202--203
 
  []
 
 <test_1.png, id=20, 638.385pt x 325.215pt>
 File: test_1.png Graphic file (type png)
  <use test_1.png>
-Package pdftex.def Info: test_1.png used on input line 204.
+Package pdftex.def Info: test_1.png used on input line 210.
 (pdftex.def)             Requested size: 252.0pt x 128.37663pt.
 
 <test_2.png, id=22, 1219.55624pt x 627.34375pt>
 File: test_2.png Graphic file (type png)
  <use test_2.png>
-Package pdftex.def Info: test_2.png used on input line 217.
+Package pdftex.def Info: test_2.png used on input line 223.
 (pdftex.def)             Requested size: 252.0pt x 129.62097pt.
 
 <test_3.png, id=23, 1100.11pt x 681.54625pt>
 File: test_3.png Graphic file (type png)
  <use test_3.png>
-Package pdftex.def Info: test_3.png used on input line 229.
+Package pdftex.def Info: test_3.png used on input line 235.
 (pdftex.def)             Requested size: 252.0pt x 156.11797pt.
- [3 <./test_1.png> <./test_2.png> <./test_3.png>] [4
-
-] (./paper.aux)
+ [3 <./test_1.png> <./test_2.png> <./test_3.png>] (./paper.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -398,7 +396,7 @@ Here is how much of TeX's memory you used:
  7503 multiletter control sequences out of 15000+600000
  41788 words of font info for 79 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 38i,10n,49p,2019b,1191s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,10n,49p,1391b,1191s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/
@@ -410,10 +408,10 @@ cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></
 usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texl
 ive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/
 fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (4 pages, 209881 bytes).
+Output written on paper.pdf (3 pages, 208913 bytes).
 PDF statistics:
- 69 PDF objects out of 1000 (max. 8388607)
- 45 compressed objects within 1 object stream
+ 66 PDF objects out of 1000 (max. 8388607)
+ 43 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
