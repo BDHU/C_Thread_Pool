@@ -6,6 +6,7 @@ test:
 	mkdir output
 	mkdir poutput
 	mkdir pwoutput
+	mkdir goutput
 	$(CC) -o ctest test.c thread.c $(FLAGS)
 	$(CC) -o ptest ptest.c $(FLAGS)
 	$(CC) -o wtest pworkertest.c $(FLAGS)
@@ -21,4 +22,4 @@ clean:
 	rm -rf output
 	rm -rf poutput
 	rm -rf pwoutput
-       
+	rm -rf goutput

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	// "os"
+	"os"
 	"sync"
 	"time"
 )
