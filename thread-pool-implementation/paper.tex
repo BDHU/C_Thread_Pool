@@ -169,6 +169,8 @@ Below is the hardware we used to conduct experiements on the performance of the 
 			\hline
 			OS & Ubuntu 16.04.4 LTS 64-bit\\
 			\hline
+			Compiler & GCC 5.40\\
+			\hline
 		\end{tabular}
 		\end{center}
 	\end{table}
@@ -213,23 +215,9 @@ We create same tasks for every implementation to execute to ensure fairness. we'
 	\end{figure}
 
 \section{Conclusion}
-
-
-
-	% If you have questions about how to write mathematical formulas in LaTeX, please read a LaTeX book or the 'Not So Short Introduction to LaTeX': tobi.oetiker.ch/lshort/lshort.pdf
-
-	% This is how you include a eps figure in your document. LaTeX only accepts EPS or TIFF files.
-	\begin{figure}[!hbt]
-		% Center the figure.
-		\begin{center}
-		% Include the eps file, scale it such that it's width equals the column width. You can also put width=8cm for example...
-		\includegraphics[width=\columnwidth]{plot_tf}
-		% Create a subtitle for the figure.
-		\caption{Simulation results on the AWGN channel. Average throughput $k/n$ vs $E_s/N_0$.}
-		% Define the label of the figure. It's good to use 'fig:title', so you know that the label belongs to a figure.
-		\label{fig:tf_plot}
-		\end{center}
-	\end{figure}
+	Theoratically, thread pool can be very efficient especially dealing with a large number of relatively short tasks concurrently. In order to acheive maximum performance boost, the use of context switch should be minimized. The thread pool does a greate job of reducing the overhead in context switch. In addition, work stealing further facilitates the work throughput by letting idle threads execute other threads' tasks. However, thread pool is not a silver bullet that solves every problem of thread. The overhead of thread context switch is transfered to each thread's task queue as executing tasks requires dequeing the task each time, which also applies to job stealing. We've also conducted experiement with creating only one task queue shared between all threads, but the same thing still applies here that the overhead is transfered to the queue since accessing tasks is performed with lock's protection. In addition, round-robin style task distribution may not be the best way to distribute tasks as calling thread is unware of the actual workload in its distribution target. The work stealing is also very tricky to implement as the stealer is not aware of the workload distribution during runtime. If the majority of threads finish execution while a few survivor threads with many tasks are still alive, the parallelism can be compromised since a few threads become the bottleneck that causes main threads waiting unnecessarily. Additional improvements such that runtime dynamic workload check and compiler support for user-guided optimization will further increase the usibility of thread pool.\\
+	
+	In summary, the thread pool is great for running a large amount of tasks effciently with relatively small number of threads. In parallel applications with many short tasks to perform thread will be a strong candidate solution.
 
 
 % Your document ends here!

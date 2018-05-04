@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.8.29)  3 MAY 2018 19:10
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.8.29)  3 MAY 2018 21:34
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -238,9 +238,6 @@ LaTeX Warning: Label `fig:tf_plot' multiply defined.
 
 LaTeX Warning: Label `fig:tf_plot' multiply defined.
 
-
-LaTeX Warning: Label `fig:tf_plot' multiply defined.
-
 )
 \openout1 = `paper.aux'.
 
@@ -357,64 +354,66 @@ Missing character: There is no â in font ptmr7t!
 Missing character: There is no „ in font ptmr7t!
 Missing character: There is no ¢ in font ptmr7t!
 
-Underfull \hbox (badness 10000) in paragraph at lines 176--177
+Underfull \hbox (badness 10000) in paragraph at lines 178--179
 
  []
 
 <test_1.png, id=13, 638.385pt x 325.215pt>
 File: test_1.png Graphic file (type png)
  <use test_1.png>
-Package pdftex.def Info: test_1.png used on input line 182.
+Package pdftex.def Info: test_1.png used on input line 184.
 (pdftex.def)             Requested size: 252.0pt x 128.37663pt.
 
 <test_2.png, id=15, 1219.55624pt x 627.34375pt>
 File: test_2.png Graphic file (type png)
  <use test_2.png>
-Package pdftex.def Info: test_2.png used on input line 195.
+Package pdftex.def Info: test_2.png used on input line 197.
 (pdftex.def)             Requested size: 252.0pt x 129.62097pt.
 
 <test_3.png, id=16, 1100.11pt x 681.54625pt>
 File: test_3.png Graphic file (type png)
  <use test_3.png>
-Package pdftex.def Info: test_3.png used on input line 207.
+Package pdftex.def Info: test_3.png used on input line 209.
 (pdftex.def)             Requested size: 252.0pt x 156.11797pt.
 
-<plot_tf.pdf, id=17, 449.68pt x 338.26375pt>
-File: plot_tf.pdf Graphic file (type pdf)
- <use plot_tf.pdf>
-Package pdftex.def Info: plot_tf.pdf used on input line 226.
-(pdftex.def)             Requested size: 252.0pt x 189.5606pt.
- [2 <./test_1.png> <./test_2.png> <./test_3.png>] [3
+Underfull \hbox (badness 2762) in paragraph at lines 218--219
+\OT1/ptm/m/n/10 deal-ing with a large num-ber of rel-a-tively short tasks
+ []
 
- <./plot_tf.pdf>] (./paper.aux)
+
+Underfull \hbox (badness 10000) in paragraph at lines 218--219
+
+ []
+
+[2 <./test_1.png> <./test_2.png> <./test_3.png>] [3
+
+] (./paper.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 4676 strings out of 494910
- 67469 string characters out of 6179836
+ 4671 strings out of 494910
+ 67395 string characters out of 6179836
  160742 words of memory out of 5000000
- 7914 multiletter control sequences out of 15000+600000
+ 7910 multiletter control sequences out of 15000+600000
  40652 words of font info for 78 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  38i,10n,49p,2275b,1451s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7
-.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></
-usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/
-fonts/type1/urw/times/utmr8a.pfb>
-Output written on paper.pdf (3 pages, 223983 bytes).
+f-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
+Output written on paper.pdf (3 pages, 194369 bytes).
 PDF statistics:
- 80 PDF objects out of 1000 (max. 8388607)
- 53 compressed objects within 1 object stream
+ 62 PDF objects out of 1000 (max. 8388607)
+ 40 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
