@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  3 MAY 2018 21:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  3 MAY 2018 21:39
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -362,30 +362,28 @@ Missing character: There is no â in font ptmr7t!
 Missing character: There is no „ in font ptmr7t!
 Missing character: There is no ¢ in font ptmr7t!
 
-Underfull \hbox (badness 10000) in paragraph at lines 189--190
+Underfull \hbox (badness 10000) in paragraph at lines 194--195
 
  []
 
-<test_1.png, id=14, 638.385pt x 325.215pt>
+[2] <test_1.png, id=20, 638.385pt x 325.215pt>
 File: test_1.png Graphic file (type png)
  <use test_1.png>
-Package pdftex.def Info: test_1.png used on input line 195.
+Package pdftex.def Info: test_1.png used on input line 200.
 (pdftex.def)             Requested size: 252.0pt x 128.37663pt.
 
-<test_2.png, id=16, 1219.55624pt x 627.34375pt>
+<test_2.png, id=22, 1219.55624pt x 627.34375pt>
 File: test_2.png Graphic file (type png)
  <use test_2.png>
-Package pdftex.def Info: test_2.png used on input line 208.
+Package pdftex.def Info: test_2.png used on input line 213.
 (pdftex.def)             Requested size: 252.0pt x 129.62097pt.
 
-<test_3.png, id=17, 1100.11pt x 681.54625pt>
+<test_3.png, id=23, 1100.11pt x 681.54625pt>
 File: test_3.png Graphic file (type png)
  <use test_3.png>
-Package pdftex.def Info: test_3.png used on input line 220.
+Package pdftex.def Info: test_3.png used on input line 225.
 (pdftex.def)             Requested size: 252.0pt x 156.11797pt.
- [2] [3
-
- <./test_1.png> <./test_2.png> <./test_3.png>] (./paper.aux)
+ [3 <./test_1.png> <./test_2.png> <./test_3.png>] (./paper.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -393,7 +391,7 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  4681 strings out of 492995
  68014 string characters out of 6132704
- 164274 words of memory out of 5000000
+ 165274 words of memory out of 5000000
  8179 multiletter control sequences out of 15000+600000
  41788 words of font info for 79 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -410,7 +408,7 @@ exmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2017/texmf-dist/
 fonts/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2017/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on paper.pdf (3 pages, 203288 bytes).
+Output written on paper.pdf (3 pages, 205325 bytes).
 PDF statistics:
  66 PDF objects out of 1000 (max. 8388607)
  43 compressed objects within 1 object stream
