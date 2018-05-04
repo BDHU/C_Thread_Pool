@@ -11,6 +11,7 @@
                         % which can be found as esplatex.ps and epslatex.pdf
                         % at: http://www.ctan.org/tex-archive/info/
 \usepackage{color}
+\usepackage[section]{placeins}
 %\usepackage{psfrag}    % Written by Craig Barratt, Michael C. Grant,
                         % and David Carlisle
                         % This package allows you to substitute LaTeX
@@ -194,7 +195,7 @@ There are several goals we are aiming to achieve in the experiment. First, we wa
 
 We create same tasks for every implementation to execute to ensure fairness. we've selected three types of tests that represent three typical scenarios in most applications. We designed a task that accesses file system and performs read and write operations. Since accessing file system usually requires blocking which generates large overhead, this task is perfect to represent tasks that takes more than a few CPU cycles to finish. We also designed a task that task an argument, and then computer then sum based on the input and generates a simple hash value. This represents a short to medium tasks present in most applications and we selected it as a candidate to represent short tasks. We also include a task that does nothing in order to test sheer performance of the thread pool without the influence of any outside factors. In addition, we mixed the number of long and shorts tasks in each benchmark in order to generalize the real life scenario where a mixture of different tasks are executed. We want to show that the speedup is not or at least minimally affected by the type of tasks executed. Then, we test the scalability of the thread pool itself by gradually increase the number of threads in the thread pool running $10,000$ tasks. The result matches with our expectation as the scalability is achieved when increasing the number of threads in the thread pool.\\
 
-\newpage
+%\newpage
 
 \begin{figure}[!hbt]
 		% Center the figure.
@@ -232,6 +233,8 @@ We create same tasks for every implementation to execute to ensure fairness. we'
 		\label{fig:tf_plot}
 		\end{center}
 	\end{figure}
+
+\FloatBarrier
 
 \section{Conclusion}
 	Theoratically, thread pool can be very efficient especially dealing with a large number of relatively short tasks concurrently. In order to acheive maximum performance boost, the use of context switch should be minimized. The thread pool does a greate job of reducing the overhead in context switch. In addition, work stealing further facilitates the work throughput by letting idle threads execute other threads' tasks. However, thread pool is not a silver bullet that solves every problem of thread. The overhead of thread context switch is transfered to each thread's task queue as executing tasks requires dequeing the task each time, which also applies to job stealing. We've also conducted experiement with creating only one task queue shared between all threads, but the same thing still applies here that the overhead is transfered to the queue since accessing tasks is performed with lock's protection. In addition, round-robin style task distribution may not be the best way to distribute tasks as calling thread is unware of the actual workload in its distribution target. The work stealing is also very tricky to implement as the stealer is not aware of the workload distribution during runtime. If the majority of threads finish execution while a few survivor threads with many tasks are still alive, the parallelism can be compromised since a few threads become the bottleneck that causes main threads waiting unnecessarily. Additional improvements such that runtime dynamic workload check and compiler support for user-guided optimization will further increase the usibility of thread pool.\\
